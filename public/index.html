@@ -489,8 +489,8 @@ function processAll() {
       });
     }
 
-    // Flag if any day > 8 hours
-    const flagged = entryHrs > 8;
+    // Flag if any day > 10.5 hours
+    const flagged = entryHrs > 10.5;
     if (flagged) byEmp[wid].flags.push({ type: 'over8', date: entry.start_time, hrs: entryHrs });
 
     byEmp[wid].entries.push({
