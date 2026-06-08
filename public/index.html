@@ -3,123 +3,82 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Operations timesheets</title>
+  <title>Care Coordinators — Timesheets</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
-      --bg:         #F4F3EF;
-      --surface:    #FFFFFF;
-      --border:     rgba(0,0,0,0.07);
-      --border-md:  rgba(0,0,0,0.13);
-      --text:       #17161A;
-      --muted:      #68676D;
-      --hint:       #A09FA6;
-      --accent:     #185FA5;
-      --accent-lt:  #E6F1FB;
-      --accent-tx:  #0C447C;
-      --green-lt:   #EAF3DE;
-      --green-tx:   #27500A;
-      --amber-lt:   #FAEEDA;
-      --amber-tx:   #633806;
-      --red-lt:     #FCEBEB;
-      --red-tx:     #791F1F;
-      --purple-lt:  #EEEDFE;
-      --purple-tx:  #3C3489;
-      --warn-lt:    #FEF3C7;
-      --warn-tx:    #92400E;
-      --punch-bg:   #F8F7F4;
-      --r:          8px;
-      --r-lg:       12px;
+      --bg:        #F4F3EF;
+      --surface:   #FFFFFF;
+      --border:    rgba(0,0,0,0.07);
+      --border-md: rgba(0,0,0,0.13);
+      --text:      #17161A;
+      --muted:     #68676D;
+      --hint:      #A09FA6;
+      --accent:    #185FA5;
+      --accent-lt: #E6F1FB;
+      --accent-tx: #0C447C;
+      --red:       #DC2626;
+      --red-lt:    #FEE2E2;
+      --red-tx:    #7F1D1D;
+      --amber-lt:  #FEF3C7;
+      --amber-tx:  #78350F;
+      --green-lt:  #DCFCE7;
+      --green-tx:  #14532D;
+      --purple-lt: #EDE9FE;
+      --purple-tx: #4C1D95;
+      --warn-lt:   #FEF9C3;
+      --warn-tx:   #713F12;
+      --punch-bg:  #F9F8F5;
+      --flag-bg:   #FFF7ED;
+      --flag-bdr:  #FED7AA;
+      --flag-tx:   #9A3412;
+      --r:         8px;
+      --r-lg:      12px;
     }
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg:         #111013;
-        --surface:    #1A191D;
-        --border:     rgba(255,255,255,0.07);
-        --border-md:  rgba(255,255,255,0.13);
-        --text:       #EEEDF2;
-        --muted:      #9B9AA1;
-        --hint:       #5C5B63;
-        --accent:     #378ADD;
-        --accent-lt:  #0C2A4A;
-        --accent-tx:  #85B7EB;
-        --green-lt:   #173404;
-        --green-tx:   #C0DD97;
-        --amber-lt:   #412402;
-        --amber-tx:   #FAC775;
-        --red-lt:     #501313;
-        --red-tx:     #F09595;
-        --purple-lt:  #26215C;
-        --purple-tx:  #CECBF6;
-        --warn-lt:    #3B1F03;
-        --warn-tx:    #FCD34D;
-        --punch-bg:   #141316;
+        --bg:        #111013;
+        --surface:   #1A191D;
+        --border:    rgba(255,255,255,0.07);
+        --border-md: rgba(255,255,255,0.13);
+        --text:      #EEEDF2;
+        --muted:     #9B9AA1;
+        --hint:      #5C5B63;
+        --accent:    #378ADD;
+        --accent-lt: #0C2A4A;
+        --accent-tx: #85B7EB;
+        --red:       #F87171;
+        --red-lt:    #450A0A;
+        --red-tx:    #FCA5A5;
+        --amber-lt:  #3B1F03;
+        --amber-tx:  #FCD34D;
+        --green-lt:  #052E16;
+        --green-tx:  #86EFAC;
+        --purple-lt: #2E1065;
+        --purple-tx: #C4B5FD;
+        --warn-lt:   #3B1F03;
+        --warn-tx:   #FCD34D;
+        --punch-bg:  #141316;
+        --flag-bg:   #2C1A08;
+        --flag-bdr:  #92400E;
+        --flag-tx:   #FCD34D;
       }
     }
-
     html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; }
 
-    /* ── Login screen ── */
-    #loginScreen {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-    .login-card {
-      background: var(--surface);
-      border: 0.5px solid var(--border-md);
-      border-radius: var(--r-lg);
-      padding: 40px 36px;
-      width: 100%;
-      max-width: 380px;
-    }
-    .login-logo {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 28px;
-    }
-    .login-logo-icon {
-      width: 36px; height: 36px;
-      background: var(--accent);
-      border-radius: 9px;
-      display: flex; align-items: center; justify-content: center;
-      color: #fff; font-size: 18px;
-    }
+    /* ── Login ── */
+    #loginScreen { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .login-card { background: var(--surface); border: 0.5px solid var(--border-md); border-radius: var(--r-lg); padding: 40px 36px; width: 100%; max-width: 380px; }
+    .login-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+    .login-logo-icon { width: 36px; height: 36px; background: var(--accent); border-radius: 9px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 18px; }
     .login-logo-text { font-size: 15px; font-weight: 600; }
     .login-label { font-size: 13px; color: var(--muted); margin-bottom: 8px; display: block; }
-    .login-input {
-      width: 100%;
-      padding: 10px 12px;
-      border: 0.5px solid var(--border-md);
-      border-radius: var(--r);
-      background: var(--bg);
-      color: var(--text);
-      font-family: inherit;
-      font-size: 14px;
-      outline: none;
-      margin-bottom: 12px;
-    }
+    .login-input { width: 100%; padding: 10px 12px; border: 0.5px solid var(--border-md); border-radius: var(--r); background: var(--bg); color: var(--text); font-family: inherit; font-size: 14px; outline: none; margin-bottom: 12px; }
     .login-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(24,95,165,0.12); }
-    .login-btn {
-      width: 100%;
-      padding: 10px;
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      border-radius: var(--r);
-      font-family: inherit;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: opacity 0.15s;
-    }
+    .login-btn { width: 100%; padding: 10px; background: var(--accent); color: #fff; border: none; border-radius: var(--r); font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
     .login-btn:hover { opacity: 0.88; }
     .login-btn:disabled { opacity: 0.5; cursor: default; }
     .login-error { font-size: 13px; color: var(--red-tx); background: var(--red-lt); padding: 8px 12px; border-radius: var(--r); margin-top: 10px; display: none; }
@@ -127,239 +86,126 @@
     /* ── Dashboard ── */
     #dashboard { display: none; }
 
-    .topbar {
-      background: var(--surface);
-      border-bottom: 0.5px solid var(--border);
-      padding: 0 24px;
-      height: 52px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
+    .topbar { background: var(--surface); border-bottom: 0.5px solid var(--border); padding: 0 24px; height: 52px; display: flex; align-items: center; justify-content: space-between; gap: 12px; position: sticky; top: 0; z-index: 20; }
     .topbar-left { display: flex; align-items: center; gap: 10px; }
-    .ops-chip {
-      background: var(--accent-lt);
-      color: var(--accent-tx);
-      font-size: 11.5px;
-      font-weight: 500;
-      padding: 3px 9px;
-      border-radius: var(--r);
-      letter-spacing: 0.02em;
-    }
+    .dept-chip { background: var(--accent-lt); color: var(--accent-tx); font-size: 11.5px; font-weight: 500; padding: 3px 9px; border-radius: var(--r); }
     .topbar-title { font-size: 14px; font-weight: 500; }
     .topbar-right { display: flex; align-items: center; gap: 8px; }
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: #22C55E; animation: pulse 2.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.3} }
+    .status-txt { font-size: 12px; color: var(--muted); }
 
     .week-nav { display: flex; align-items: center; gap: 4px; }
     .week-nav .wlabel { font-size: 12.5px; color: var(--muted); min-width: 148px; text-align: center; font-weight: 500; }
-    .icon-btn {
-      width: 30px; height: 30px;
-      border: 0.5px solid var(--border-md);
-      border-radius: var(--r);
-      background: none;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--muted);
-      font-size: 15px;
-      cursor: pointer;
-      transition: background 0.1s;
-    }
+    .icon-btn { width: 30px; height: 30px; border: 0.5px solid var(--border-md); border-radius: var(--r); background: none; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 15px; cursor: pointer; }
     .icon-btn:hover { background: var(--bg); }
     .icon-btn:disabled { opacity: 0.35; cursor: default; }
-
-    .text-btn {
-      display: inline-flex; align-items: center; gap: 5px;
-      padding: 6px 11px;
-      border: 0.5px solid var(--border-md);
-      border-radius: var(--r);
-      background: none;
-      color: var(--muted);
-      font-family: inherit;
-      font-size: 12.5px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.1s;
-      white-space: nowrap;
-    }
+    .text-btn { display: inline-flex; align-items: center; gap: 5px; padding: 6px 11px; border: 0.5px solid var(--border-md); border-radius: var(--r); background: none; color: var(--muted); font-family: inherit; font-size: 12.5px; font-weight: 500; cursor: pointer; white-space: nowrap; }
     .text-btn:hover { background: var(--bg); color: var(--text); }
     .text-btn i { font-size: 14px; }
 
-    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: #22C55E; animation: pulse 2.5s infinite; flex-shrink: 0; }
-    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
-
-    /* ── Dept tabs ── */
-    .dept-tabs-wrap {
-      background: var(--surface);
-      border-bottom: 0.5px solid var(--border);
-      padding: 0 24px;
-      display: flex;
-      gap: 0;
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
-    .dept-tabs-wrap::-webkit-scrollbar { display: none; }
-    .dept-tab {
-      font-size: 13px;
-      padding: 12px 14px;
-      color: var(--muted);
-      border-bottom: 2px solid transparent;
-      cursor: pointer;
-      white-space: nowrap;
-      font-weight: 400;
-      transition: color 0.1s;
-      background: none;
-      border-top: none;
-      border-left: none;
-      border-right: none;
-      font-family: inherit;
-    }
-    .dept-tab:hover { color: var(--text); }
-    .dept-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
-    .dept-tab .tab-count { font-size: 11px; color: var(--hint); margin-left: 5px; }
-
     /* ── Metrics ── */
-    .metrics-wrap { padding: 20px 24px; border-bottom: 0.5px solid var(--border); }
-    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
-    .metric {
-      background: var(--bg);
-      border-radius: var(--r);
-      padding: 12px 14px;
-    }
+    .metrics-wrap { padding: 18px 24px; border-bottom: 0.5px solid var(--border); background: var(--surface); }
+    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
+    .metric { background: var(--bg); border-radius: var(--r); padding: 12px 14px; }
     .metric-label { font-size: 11.5px; color: var(--muted); font-weight: 500; margin-bottom: 5px; }
-    .metric-val { font-size: 22px; font-weight: 500; line-height: 1; color: var(--text); }
-    .metric-val.accent { color: var(--accent); }
+    .metric-val { font-size: 22px; font-weight: 500; line-height: 1; }
+    .metric-val.blue { color: var(--accent); }
 
-    /* ── Main content ── */
-    .content { padding: 20px 24px 60px; }
+    /* ── Flag banner ── */
+    .flag-banner { margin: 16px 24px 0; background: var(--flag-bg); border: 1px solid var(--flag-bdr); border-radius: var(--r-lg); overflow: hidden; }
+    .flag-header { display: flex; align-items: center; gap: 8px; padding: 12px 16px; cursor: pointer; user-select: none; }
+    .flag-header i { font-size: 18px; color: var(--flag-tx); }
+    .flag-title { font-size: 13px; font-weight: 600; color: var(--flag-tx); flex: 1; }
+    .flag-chevron { font-size: 14px; color: var(--flag-tx); transition: transform 0.18s; }
+    .flag-chevron.open { transform: rotate(90deg); }
+    .flag-body { border-top: 1px solid var(--flag-bdr); }
+    .flag-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 16px; border-bottom: 0.5px solid var(--flag-bdr); font-size: 13px; }
+    .flag-row:last-child { border-bottom: none; }
+    .flag-row i { font-size: 15px; color: var(--flag-tx); flex-shrink: 0; margin-top: 1px; }
+    .flag-name { font-weight: 500; color: var(--text); }
+    .flag-detail { color: var(--muted); margin-top: 1px; font-size: 12px; }
 
-    .toolbar {
-      display: flex; align-items: center; gap: 8px;
-      margin-bottom: 14px;
-    }
-    .search-wrap { position: relative; flex: 1; max-width: 240px; }
+    /* ── Content ── */
+    .content { padding: 16px 24px 60px; }
+    .toolbar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+    .search-wrap { position: relative; }
     .search-wrap i { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); font-size: 15px; color: var(--hint); pointer-events: none; }
-    .search-input {
-      width: 100%;
-      padding: 7px 10px 7px 32px;
-      border: 0.5px solid var(--border-md);
-      border-radius: var(--r);
-      background: var(--surface);
-      color: var(--text);
-      font-family: inherit;
-      font-size: 13px;
-      outline: none;
-    }
+    .search-input { width: 200px; padding: 7px 10px 7px 32px; border: 0.5px solid var(--border-md); border-radius: var(--r); background: var(--surface); color: var(--text); font-family: inherit; font-size: 13px; outline: none; }
     .search-input:focus { border-color: var(--accent); }
+    .filter-select { padding: 7px 10px; border: 0.5px solid var(--border-md); border-radius: var(--r); background: var(--surface); color: var(--text); font-family: inherit; font-size: 13px; outline: none; }
+    .filter-select:focus { border-color: var(--accent); }
     .emp-count { font-size: 12px; color: var(--hint); margin-left: auto; }
 
-    /* ── Employee table ── */
-    .emp-table-wrap {
-      background: var(--surface);
-      border: 0.5px solid var(--border);
-      border-radius: var(--r-lg);
-      overflow: hidden;
-    }
+    /* ── Table ── */
+    .table-card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--r-lg); overflow: hidden; }
     table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-    thead th {
-      text-align: left;
-      padding: 9px 12px;
-      font-size: 11.5px;
-      font-weight: 500;
-      color: var(--muted);
-      background: var(--bg);
-      border-bottom: 0.5px solid var(--border);
-      white-space: nowrap;
-    }
+    thead th { text-align: left; padding: 9px 12px; font-size: 11.5px; font-weight: 500; color: var(--muted); background: var(--bg); border-bottom: 0.5px solid var(--border); white-space: nowrap; }
     th.r, td.r { text-align: right; }
 
-    /* Employee rows */
     tr.emp-row { cursor: pointer; }
     tr.emp-row td { padding: 10px 12px; border-bottom: 0.5px solid var(--border); vertical-align: middle; }
     tr.emp-row:hover td { background: var(--bg); }
     tr.emp-row.open td { background: var(--bg); border-bottom: none; }
-    tr.emp-row:last-child td,
-    tr.punch-section:last-child td { border-bottom: none; }
+    tr.emp-row.flagged td { background: #FFFBEB; }
+    tr.emp-row.flagged:hover td { background: #FEF3C7; }
+    tr.emp-row.flagged.open td { background: #FEF3C7; border-bottom: none; }
 
     .emp-name { font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .emp-title { font-size: 11.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px; }
-    .bar-wrap { height: 3px; background: var(--border-md); border-radius: 2px; margin-top: 5px; overflow: hidden; }
-    .bar-fill { height: 100%; border-radius: 2px; background: var(--accent); }
+
+    /* ── 40hr bar with overflow ── */
+    .bar-outer { height: 4px; background: var(--border-md); border-radius: 2px; margin-top: 5px; overflow: hidden; position: relative; }
+    .bar-blue { height: 100%; border-radius: 2px; background: var(--accent); position: absolute; left: 0; top: 0; }
+    .bar-red  { height: 100%; border-radius: 0 2px 2px 0; background: var(--red); position: absolute; top: 0; }
+
     .chevron { color: var(--hint); font-size: 14px; display: inline-block; transition: transform 0.18s; }
     .chevron.open { transform: rotate(90deg); }
-
     .num { font-family: 'DM Mono', monospace; font-size: 12px; }
     .dim { color: var(--hint); }
+    .over-badge { display: inline-flex; align-items: center; gap: 3px; background: var(--red-lt); color: var(--red-tx); font-size: 10.5px; font-weight: 600; padding: 1px 6px; border-radius: 20px; margin-left: 5px; font-family: 'DM Mono', monospace; }
 
-    /* Badges */
+    /* ── Badges ── */
     .badge { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap; }
     .b-reg  { background: var(--accent-lt);  color: var(--accent-tx); }
     .b-ot   { background: var(--amber-lt);   color: var(--amber-tx); }
     .b-pto  { background: var(--green-lt);   color: var(--green-tx); }
     .b-sick { background: var(--red-lt);     color: var(--red-tx); }
     .b-hol  { background: var(--purple-lt);  color: var(--purple-tx); }
-    .b-oth  { background: var(--bg);         color: var(--muted); border: 0.5px solid var(--border-md); }
+    .b-toff { background: var(--green-lt);   color: var(--green-tx); }
+    .b-oth  { background: var(--bg); color: var(--muted); border: 0.5px solid var(--border-md); }
 
-    /* Punch section */
+    /* ── Punch section ── */
     tr.punch-section td { padding: 0; border-bottom: 0.5px solid var(--border); }
     .punch-inner { background: var(--punch-bg); }
     .punch-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-    .punch-table thead th {
-      padding: 7px 12px;
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--hint);
-      background: var(--punch-bg);
-      border-bottom: 0.5px solid var(--border);
-      text-align: left;
-    }
-    .punch-table th.r { text-align: right; }
-    .punch-table tbody td {
-      padding: 8px 12px;
-      font-size: 12.5px;
-      border-bottom: 0.5px solid var(--border);
-      background: var(--punch-bg);
-      vertical-align: top;
-    }
+    .punch-table thead th { padding: 6px 12px; font-size: 11px; font-weight: 500; color: var(--hint); background: var(--punch-bg); border-bottom: 0.5px solid var(--border); }
+    .punch-table thead th.r { text-align: right; }
+    .punch-table tbody td { padding: 8px 12px; font-size: 12.5px; border-bottom: 0.5px solid var(--border); background: var(--punch-bg); vertical-align: top; }
     .punch-table tbody tr:last-child td { border-bottom: none; }
+    .punch-table tbody tr.punch-flagged td { background: #FFFBEB; }
     .punch-time { font-family: 'DM Mono', monospace; font-size: 12px; }
-    .comment-tag {
-      display: inline-flex; align-items: flex-start; gap: 5px;
-      background: var(--warn-lt);
-      color: var(--warn-tx);
-      font-size: 11.5px;
-      padding: 4px 8px;
-      border-radius: var(--r);
-      margin-top: 4px;
-      line-height: 1.4;
-    }
+    .flag-icon { color: #D97706; font-size: 14px; }
+    .comment-tag { display: inline-flex; align-items: flex-start; gap: 5px; background: var(--warn-lt); color: var(--warn-tx); font-size: 11.5px; padding: 4px 8px; border-radius: var(--r); margin-top: 4px; line-height: 1.4; }
     .comment-tag i { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
 
-    /* States */
-    .state-view {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      padding: 60px 20px; color: var(--muted); gap: 10px; font-size: 13.5px;
-    }
+    /* ── States ── */
+    .state-view { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; color: var(--muted); gap: 10px; font-size: 13.5px; }
     .state-view i { font-size: 32px; opacity: 0.3; }
     .state-view.err { color: var(--red-tx); }
     .state-view.err i { opacity: 0.6; }
     .spinner { width: 20px; height: 20px; border: 2px solid var(--border-md); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
-
-    .status-bar { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
   </style>
 </head>
 <body>
 
-<!-- ════════════════════════════════════════
-     LOGIN SCREEN
-════════════════════════════════════════ -->
+<!-- LOGIN -->
 <div id="loginScreen">
   <div class="login-card">
     <div class="login-logo">
-      <div class="login-logo-icon"><i class="ti ti-clock-hour-4" aria-hidden="true"></i></div>
-      <div class="login-logo-text">Operations timesheets</div>
+      <div class="login-logo-icon"><i class="ti ti-clock-hour-4"></i></div>
+      <div class="login-logo-text">Care Coordinators — Timesheets</div>
     </div>
     <label class="login-label" for="pwInput">Password</label>
     <input class="login-input" type="password" id="pwInput" placeholder="Enter password" autocomplete="current-password" />
@@ -368,170 +214,142 @@
   </div>
 </div>
 
-<!-- ════════════════════════════════════════
-     DASHBOARD
-════════════════════════════════════════ -->
+<!-- DASHBOARD -->
 <div id="dashboard">
 
   <div class="topbar">
     <div class="topbar-left">
-      <span class="ops-chip">Operations</span>
+      <span class="dept-chip">Care Coordinators</span>
       <span class="topbar-title">Weekly timesheets</span>
     </div>
     <div class="topbar-right">
-      <div class="status-bar">
-        <span class="live-dot" aria-hidden="true"></span>
-        <span id="statusLine">Loading…</span>
-      </div>
+      <span class="live-dot"></span>
+      <span class="status-txt" id="statusLine">Loading…</span>
       <div class="week-nav">
-        <button class="icon-btn" id="prevWeekBtn" onclick="shiftWeek(-1)" aria-label="Previous week"><i class="ti ti-chevron-left"></i></button>
-        <span class="wlabel" id="weekLabel" aria-live="polite">—</span>
-        <button class="icon-btn" id="nextWeekBtn" onclick="shiftWeek(1)" aria-label="Next week"><i class="ti ti-chevron-right"></i></button>
+        <button class="icon-btn" id="prevBtn" onclick="shiftWeek(-1)"><i class="ti ti-chevron-left"></i></button>
+        <span class="wlabel" id="weekLabel">—</span>
+        <button class="icon-btn" id="nextBtn" onclick="shiftWeek(1)"><i class="ti ti-chevron-right"></i></button>
       </div>
-      <button class="text-btn" id="todayBtn" onclick="goCurrentWeek()" style="display:none">
-        <i class="ti ti-home"></i> Current week
-      </button>
+      <button class="text-btn" id="todayBtn" onclick="goCurrentWeek()" style="display:none"><i class="ti ti-home"></i> Current week</button>
       <button class="text-btn" onclick="refreshData()"><i class="ti ti-refresh"></i> Refresh</button>
       <button class="text-btn" onclick="exportCSV()"><i class="ti ti-download"></i> Export CSV</button>
     </div>
   </div>
 
-  <div class="dept-tabs-wrap" id="deptTabs" role="tablist" aria-label="Filter by sub-department"></div>
-
   <div class="metrics-wrap">
     <div class="metrics-grid" id="metricsGrid"></div>
+  </div>
+
+  <!-- Flag banner -->
+  <div id="flagBanner" style="display:none">
+    <div class="flag-banner">
+      <div class="flag-header" onclick="toggleFlagBanner()">
+        <i class="ti ti-alert-triangle"></i>
+        <span class="flag-title" id="flagTitle">Entries requiring review</span>
+        <i class="ti ti-chevron-right flag-chevron open" id="flagChevron"></i>
+      </div>
+      <div class="flag-body" id="flagBody"></div>
+    </div>
   </div>
 
   <div class="content">
     <div class="toolbar">
       <div class="search-wrap">
-        <i class="ti ti-search" aria-hidden="true"></i>
-        <input class="search-input" type="text" id="searchInput" placeholder="Search employee…" oninput="renderTable()" aria-label="Search employees" />
+        <i class="ti ti-search"></i>
+        <input class="search-input" type="text" id="searchInput" placeholder="Search employee…" oninput="renderTable()" />
       </div>
+      <select class="filter-select" id="managerFilter" onchange="renderTable()">
+        <option value="">All managers</option>
+      </select>
       <span class="emp-count" id="empCount"></span>
     </div>
-    <div class="emp-table-wrap" id="tableWrap">
+    <div class="table-card" id="tableWrap">
       <div class="state-view"><div class="spinner"></div><span>Loading…</span></div>
     </div>
   </div>
-
 </div>
 
 <script>
-/* ══════════════════════════════════════════════
-   Constants
-══════════════════════════════════════════════ */
-const SUBDEPTS = ['All operations', 'Care Coordinators', 'Licensing', 'Billing & RCM', 'Credentialing'];
-const DAYS_SUN = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-
-/* ══════════════════════════════════════════════
+/* ═══════════════════════════════════════
    State
-══════════════════════════════════════════════ */
-let workers    = {};   // id → { name, title, dept }
-let allEntries = [];   // raw time entries for the week
-let weekOffset = 0;
-let activeDept = 'All operations';
-let expandedId = null; // which employee row is open
+═══════════════════════════════════════ */
+let workers     = {};   // id → { name, title, managerId }
+let managers    = {};   // id → { name }
+let timeEntries = [];
+let timeOff     = [];
+let weekOffset  = 0;
+let expandedId  = null;
+let flagOpen    = true;
 
-/* ══════════════════════════════════════════════
-   Boot — check session, then load or show login
-══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════
+   Boot
+═══════════════════════════════════════ */
 (async function boot() {
   try {
     const r = await fetch('/api/auth');
-    if (r.ok) {
-      showDashboard();
-    } else {
-      showLogin();
-    }
-  } catch {
-    showLogin();
-  }
+    if (r.ok) showDashboard(); else showLogin();
+  } catch { showLogin(); }
 })();
 
 function showLogin() {
   document.getElementById('loginScreen').style.display = 'flex';
   document.getElementById('dashboard').style.display = 'none';
-  document.getElementById('pwInput').focus();
+  setTimeout(() => document.getElementById('pwInput').focus(), 50);
 }
-
 function showDashboard() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('dashboard').style.display = 'block';
-  buildDeptTabs();
   updateWeekLabel();
   loadAll();
 }
 
-/* ══════════════════════════════════════════════
+/* ═══════════════════════════════════════
    Login
-══════════════════════════════════════════════ */
-document.getElementById('pwInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') doLogin();
-});
+═══════════════════════════════════════ */
+document.getElementById('pwInput').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
 async function doLogin() {
   const pw  = document.getElementById('pwInput').value;
   const btn = document.getElementById('loginBtn');
   const err = document.getElementById('loginError');
   if (!pw) return;
-
-  btn.disabled = true;
-  btn.textContent = 'Signing in…';
-  err.style.display = 'none';
-
+  btn.disabled = true; btn.textContent = 'Signing in…'; err.style.display = 'none';
   try {
-    const r = await fetch('/api/auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password: pw }),
-    });
-    if (r.ok) {
-      showDashboard();
-    } else {
-      err.style.display = 'block';
-      document.getElementById('pwInput').value = '';
-      document.getElementById('pwInput').focus();
-    }
-  } catch {
-    err.textContent = 'Network error — please try again.';
-    err.style.display = 'block';
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Sign in';
-  }
+    const r = await fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) });
+    if (r.ok) { showDashboard(); }
+    else { err.style.display = 'block'; document.getElementById('pwInput').value = ''; document.getElementById('pwInput').focus(); }
+  } catch { err.textContent = 'Network error — please try again.'; err.style.display = 'block'; }
+  finally { btn.disabled = false; btn.textContent = 'Sign in'; }
 }
 
-/* ══════════════════════════════════════════════
-   Data loading
-══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════
+   Data
+═══════════════════════════════════════ */
 async function loadAll() {
   setLoading();
   try {
-    const [wRes, tRes] = await Promise.all([
+    const [wRes, tRes, toRes] = await Promise.all([
       apiFetch('/api/timesheets?endpoint=workers'),
       fetchTimeEntries(),
+      fetchTimeOff(),
     ]);
 
     workers = {};
+    managers = wRes.managers || {};
     (wRes.results || []).forEach(w => {
       const u = w.user || {};
       const name = [u.first_name || '', u.last_name || ''].filter(Boolean).join(' ') || w.work_email || w.id;
-      workers[w.id] = {
-        name,
-        title: w.title || '—',
-        dept:  w.department?.name || 'Unknown',
-        status: w.status,
-      };
+      workers[w.id] = { name, title: w.title || '—', managerId: w.manager_id || null };
     });
 
-    allEntries = tRes.results || [];
-    buildDeptTabs();
+    timeEntries = tRes.results || [];
+    timeOff     = toRes.results || [];
+
+    populateManagerFilter();
     renderAll();
-    document.getElementById('statusLine').textContent =
-      'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('statusLine').textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   } catch (e) {
-    if (e.message.includes('401')) { showLogin(); return; }
+    if (e.message === '401') { showLogin(); return; }
     showError(e.message);
   }
 }
@@ -540,14 +358,18 @@ async function fetchTimeEntries() {
   const { start, end } = weekBounds();
   return apiFetch(`/api/timesheets?startDate=${toDateStr(start)}&endDate=${toDateStr(end)}`);
 }
+async function fetchTimeOff() {
+  const { start, end } = weekBounds();
+  return apiFetch(`/api/timesheets?endpoint=timeoff&startDate=${toDateStr(start)}&endDate=${toDateStr(end)}`);
+}
 
 async function apiFetch(url) {
   const r = await fetch(url);
   if (!r.ok) {
     const j = await r.json().catch(() => ({}));
-    const err = new Error(j.error || `HTTP ${r.status}`);
-    if (r.status === 401) err.message = '401';
-    throw err;
+    const e = new Error(j.error || `HTTP ${r.status}`);
+    if (r.status === 401) e.message = '401';
+    throw e;
   }
   return r.json();
 }
@@ -555,109 +377,105 @@ async function apiFetch(url) {
 async function refreshData() {
   document.getElementById('statusLine').textContent = 'Refreshing…';
   try {
-    const tRes = await fetchTimeEntries();
-    allEntries = tRes.results || [];
+    const [tRes, toRes] = await Promise.all([fetchTimeEntries(), fetchTimeOff()]);
+    timeEntries = tRes.results || [];
+    timeOff     = toRes.results || [];
     renderAll();
-    document.getElementById('statusLine').textContent =
-      'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('statusLine').textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   } catch (e) {
-    if (e.message.includes('401')) { showLogin(); return; }
+    if (e.message === '401') { showLogin(); return; }
     document.getElementById('statusLine').textContent = 'Refresh failed';
   }
 }
 
-/* ══════════════════════════════════════════════
-   Week helpers  (Sun–Sat)
-══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════
+   Week helpers (Sun–Sat)
+═══════════════════════════════════════ */
 function weekBounds(offset = weekOffset) {
   const now = new Date();
   const sun = new Date(now);
   sun.setDate(now.getDate() - now.getDay() + offset * 7);
-  sun.setHours(0, 0, 0, 0);
+  sun.setHours(0,0,0,0);
   const sat = new Date(sun);
   sat.setDate(sun.getDate() + 6);
-  sat.setHours(23, 59, 59, 999);
+  sat.setHours(23,59,59,999);
   return { start: sun, end: sat };
 }
 function toDateStr(d) { return d.toISOString().split('T')[0]; }
 function fmtDate(d)   { return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
-function fmtTime(iso) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
-}
-function hrsFromSegment(seg) {
-  if (!seg.start_time || !seg.end_time) return 0;
-  return (new Date(seg.end_time) - new Date(seg.start_time)) / 3_600_000;
-}
+function fmtTime(iso) { return iso ? new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '—'; }
+function hrsFromSeg(s) { return s.start_time && s.end_time ? (new Date(s.end_time) - new Date(s.start_time)) / 3_600_000 : 0; }
 
 function updateWeekLabel() {
   const { start, end } = weekBounds();
   document.getElementById('weekLabel').textContent = `${fmtDate(start)} – ${fmtDate(end)}`;
-  document.getElementById('nextWeekBtn').disabled = weekOffset >= 0;
+  document.getElementById('nextBtn').disabled = weekOffset >= 0;
   document.getElementById('todayBtn').style.display = weekOffset !== 0 ? 'inline-flex' : 'none';
 }
-function shiftWeek(dir) { weekOffset += dir; updateWeekLabel(); loadAll(); }
+function shiftWeek(d) { weekOffset += d; updateWeekLabel(); loadAll(); }
 function goCurrentWeek() { weekOffset = 0; updateWeekLabel(); loadAll(); }
 
-/* ══════════════════════════════════════════════
-   Dept tabs
-══════════════════════════════════════════════ */
-function buildDeptTabs() {
-  const wrap = document.getElementById('deptTabs');
-  wrap.innerHTML = SUBDEPTS.map(d => {
-    const count = d === 'All operations'
-      ? Object.keys(workers).length
-      : Object.values(workers).filter(w => w.dept === d).length;
-    const cls = d === activeDept ? 'dept-tab active' : 'dept-tab';
-    return `<button class="${cls}" role="tab" aria-selected="${d === activeDept}" onclick="setDept('${esc(d)}')">${esc(d)}<span class="tab-count">${count}</span></button>`;
-  }).join('');
+/* ═══════════════════════════════════════
+   Manager filter
+═══════════════════════════════════════ */
+function populateManagerFilter() {
+  const sel = document.getElementById('managerFilter');
+  const cur = sel.value;
+  const opts = Object.entries(managers)
+    .sort((a, b) => a[1].name.localeCompare(b[1].name))
+    .map(([id, m]) => `<option value="${id}"${id === cur ? ' selected' : ''}>${esc(m.name)}</option>`)
+    .join('');
+  sel.innerHTML = '<option value="">All managers</option>' + opts;
 }
 
-function setDept(dept) {
-  activeDept = dept;
-  expandedId = null;
-  buildDeptTabs();
-  renderAll();
-}
-
-/* ══════════════════════════════════════════════
-   Process entries
-══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════
+   Segment category
+═══════════════════════════════════════ */
 function segCat(name) {
   const n = (name || '').toLowerCase();
-  if (n.includes('regular'))                              return 'regular';
-  if (n.includes('overtime') || n.includes('over time')) return 'ot';
-  if (n.includes('double'))                               return 'ot';
-  if (n.includes('pto') || n.includes('vacation'))        return 'pto';
-  if (n.includes('sick'))                                 return 'sick';
-  if (n.includes('holiday'))                              return 'holiday';
+  if (n.includes('regular'))                               return 'regular';
+  if (n.includes('overtime') || n.includes('over time'))  return 'ot';
+  if (n.includes('double'))                                return 'ot';
+  if (n.includes('pto') || n.includes('vacation'))         return 'pto';
+  if (n.includes('sick'))                                  return 'sick';
+  if (n.includes('holiday'))                               return 'holiday';
+  if (n.includes('time off') || n.includes('timeoff'))     return 'timeoff';
   return 'other';
 }
 
 function emptyBucket() {
-  return { regular: 0, ot: 0, pto: 0, sick: 0, holiday: 0, other: 0, total: 0, entries: [] };
+  return { regular: 0, ot: 0, pto: 0, sick: 0, holiday: 0, timeoff: 0, other: 0, total: 0, entries: [], flags: [] };
 }
 
-function processEntries(entries) {
+/* ═══════════════════════════════════════
+   Process entries + time off
+═══════════════════════════════════════ */
+function processAll() {
   const totals = emptyBucket();
   const byEmp  = {};
 
-  entries.forEach(entry => {
+  // Ensure all known workers have a bucket
+  Object.keys(workers).forEach(id => { byEmp[id] = emptyBucket(); });
+
+  // Time entries
+  timeEntries.forEach(entry => {
     const wid  = entry.worker_id || entry.worker || 'unknown';
     if (!byEmp[wid]) byEmp[wid] = emptyBucket();
 
-    const segs     = (entry.segments || []).filter(s => !s.break_type_id);
-    const breaks   = (entry.segments || []).filter(s => s.break_type_id);
-    const breakHrs = breaks.reduce((a, s) => a + hrsFromSegment(s), 0);
+    const segs    = (entry.segments || []).filter(s => !s.break_type_id);
+    const breaks  = (entry.segments || []).filter(s =>  s.break_type_id);
+    const breakHrs = breaks.reduce((a, s) => a + hrsFromSeg(s), 0);
+    const entryHrs = segs.reduce((a, s) => a + hrsFromSeg(s), 0);
 
+    // Accumulate by category
     if (segs.length) {
       segs.forEach(seg => {
-        const hrs = hrsFromSegment(seg);
+        const hrs = hrsFromSeg(seg);
         if (hrs <= 0) return;
         const cat = segCat(seg.display_name);
-        byEmp[wid][cat] += hrs;
+        byEmp[wid][cat] = (byEmp[wid][cat] || 0) + hrs;
         byEmp[wid].total += hrs;
-        totals[cat] += hrs;
+        totals[cat] = (totals[cat] || 0) + hrs;
         totals.total += hrs;
       });
     } else {
@@ -666,116 +484,192 @@ function processEntries(entries) {
       const ot  = (s.over_time_hours || 0) + (s.double_over_time_hours || 0);
       [['regular', reg], ['ot', ot]].forEach(([cat, hrs]) => {
         if (!hrs) return;
-        byEmp[wid][cat] += hrs;
-        byEmp[wid].total += hrs;
-        totals[cat] += hrs;
-        totals.total += hrs;
+        byEmp[wid][cat] += hrs; byEmp[wid].total += hrs;
+        totals[cat] += hrs; totals.total += hrs;
       });
     }
 
+    // Flag if any day > 8 hours
+    const flagged = entryHrs > 8;
+    if (flagged) byEmp[wid].flags.push({ type: 'over8', date: entry.start_time, hrs: entryHrs });
+
     byEmp[wid].entries.push({
-      id:        entry.id,
-      date:      entry.start_time ? new Date(entry.start_time) : null,
-      clockIn:   entry.start_time,
-      clockOut:  entry.end_time,
+      id: entry.id,
+      date: entry.start_time ? new Date(entry.start_time) : null,
+      clockIn:  entry.start_time,
+      clockOut: entry.end_time,
       breakHrs,
-      segments:  segs,
-      comments:  (entry.comments || []).map(c => c.text).filter(Boolean),
+      hrs: entryHrs,
+      flagged,
+      segments: segs,
+      comments: (entry.comments || []).map(c => c.text).filter(Boolean),
+      isTimeOff: false,
     });
   });
 
-  // sort each employee's entries by date
+  // Time off entries — merge into byEmp
+  timeOff.forEach(to => {
+    const wid = to.worker_id || to.worker || to.employee_id || 'unknown';
+    if (!byEmp[wid]) byEmp[wid] = emptyBucket();
+
+    // Duration from start/end or duration field
+    let hrs = 0;
+    if (to.start_time && to.end_time) {
+      hrs = (new Date(to.end_time) - new Date(to.start_time)) / 3_600_000;
+    } else if (to.duration) {
+      hrs = typeof to.duration === 'number' ? to.duration : parseFloat(to.duration) || 0;
+    } else if (to.hours) {
+      hrs = parseFloat(to.hours) || 0;
+    }
+
+    if (hrs <= 0) return;
+
+    // Categorise: paid vs unpaid
+    const isPaid = to.is_paid === true || (to.is_paid !== false && (to.type || '').toLowerCase().includes('paid'));
+    const cat = isPaid ? 'pto' : 'timeoff';
+
+    byEmp[wid][cat] = (byEmp[wid][cat] || 0) + hrs;
+    byEmp[wid].total += hrs;
+    totals[cat] = (totals[cat] || 0) + hrs;
+    totals.total += hrs;
+
+    byEmp[wid].entries.push({
+      id: to.id,
+      date: to.start_time ? new Date(to.start_time) : null,
+      clockIn:  to.start_time,
+      clockOut: to.end_time,
+      breakHrs: 0,
+      hrs,
+      flagged: false,
+      segments: [],
+      comments: [],
+      isTimeOff: true,
+      timeOffName: to.name || to.type || 'Time off',
+      isPaid,
+    });
+  });
+
+  // Sort each employee's entries by date
   Object.values(byEmp).forEach(b => b.entries.sort((a, b) => (a.date || 0) - (b.date || 0)));
 
   return { totals, byEmp };
 }
 
-/* ══════════════════════════════════════════════
-   Render all
-══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════
+   Render
+═══════════════════════════════════════ */
 function renderAll() {
-  const filtered = filteredEntries();
-  const { totals, byEmp } = processEntries(filtered);
+  const { totals, byEmp } = processAll();
   renderMetrics(totals);
+  renderFlagBanner(byEmp);
   renderTable(byEmp);
 }
 
-function filteredEntries() {
-  if (activeDept === 'All operations') return allEntries;
-  const deptWorkers = new Set(
-    Object.entries(workers).filter(([, w]) => w.dept === activeDept).map(([id]) => id)
-  );
-  return allEntries.filter(e => deptWorkers.has(e.worker_id || e.worker || ''));
-}
-
-function deptWorkerIds() {
-  if (activeDept === 'All operations') return new Set(Object.keys(workers));
-  return new Set(Object.entries(workers).filter(([, w]) => w.dept === activeDept).map(([id]) => id));
-}
-
 /* ── Metrics ── */
-function renderMetrics(totals) {
+function renderMetrics(t) {
   document.getElementById('metricsGrid').innerHTML = `
-    <div class="metric"><div class="metric-label">Total hours</div><div class="metric-val accent">${totals.total.toFixed(1)}</div></div>
-    <div class="metric"><div class="metric-label">Regular</div><div class="metric-val">${totals.regular.toFixed(1)}</div></div>
-    <div class="metric"><div class="metric-label">Overtime</div><div class="metric-val">${totals.ot.toFixed(1)}</div></div>
-    <div class="metric"><div class="metric-label">PTO</div><div class="metric-val">${totals.pto.toFixed(1)}</div></div>
-    <div class="metric"><div class="metric-label">Sick leave</div><div class="metric-val">${totals.sick.toFixed(1)}</div></div>
-    <div class="metric"><div class="metric-label">Holiday</div><div class="metric-val">${totals.holiday.toFixed(1)}</div></div>
+    <div class="metric"><div class="metric-label">Total hours</div><div class="metric-val blue">${t.total.toFixed(1)}</div></div>
+    <div class="metric"><div class="metric-label">Regular</div><div class="metric-val">${t.regular.toFixed(1)}</div></div>
+    <div class="metric"><div class="metric-label">Overtime</div><div class="metric-val">${t.ot.toFixed(1)}</div></div>
+    <div class="metric"><div class="metric-label">PTO (paid)</div><div class="metric-val">${t.pto.toFixed(1)}</div></div>
+    <div class="metric"><div class="metric-label">Time off (unpaid)</div><div class="metric-val">${t.timeoff.toFixed(1)}</div></div>
+    <div class="metric"><div class="metric-label">Sick leave</div><div class="metric-val">${t.sick.toFixed(1)}</div></div>
   `;
+}
+
+/* ── Flag banner ── */
+function renderFlagBanner(byEmp) {
+  const flags = [];
+  Object.entries(byEmp).forEach(([wid, d]) => {
+    d.flags.forEach(f => {
+      const w = workers[wid] || { name: wid };
+      const dateStr = f.date ? new Date(f.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : '—';
+      flags.push({ wid, name: w.name, date: dateStr, hrs: f.hrs });
+    });
+  });
+
+  const banner = document.getElementById('flagBanner');
+  if (!flags.length) { banner.style.display = 'none'; return; }
+
+  banner.style.display = 'block';
+  document.getElementById('flagTitle').textContent = `${flags.length} entr${flags.length === 1 ? 'y' : 'ies'} over 8 hours — review required`;
+  document.getElementById('flagBody').innerHTML = flags.map(f => `
+    <div class="flag-row">
+      <i class="ti ti-clock-exclamation"></i>
+      <div>
+        <div class="flag-name">${esc(f.name)}</div>
+        <div class="flag-detail">${f.date} · ${f.hrs.toFixed(1)} hours logged</div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleFlagBanner() {
+  flagOpen = !flagOpen;
+  document.getElementById('flagBody').style.display = flagOpen ? 'block' : 'none';
+  document.getElementById('flagChevron').className = `ti ti-chevron-right flag-chevron${flagOpen ? ' open' : ''}`;
 }
 
 /* ── Employee table ── */
 function renderTable(byEmpArg) {
   const search  = (document.getElementById('searchInput')?.value || '').toLowerCase();
-  const deptIds = deptWorkerIds();
-  const filtered = filteredEntries();
-  const { byEmp } = byEmpArg ? { byEmp: byEmpArg } : processEntries(filtered);
+  const mgrFilt = document.getElementById('managerFilter')?.value || '';
+  const { byEmp } = byEmpArg ? { byEmp: byEmpArg } : processAll();
 
-  // All dept workers, including those with zero entries
-  let empIds = [...deptIds].filter(id => {
-    if (!workers[id]) return false;
-    if (search && !workers[id].name.toLowerCase().includes(search)) return false;
+  let empIds = Object.keys(workers).filter(id => {
+    if (search  && !workers[id].name.toLowerCase().includes(search)) return false;
+    if (mgrFilt && workers[id].managerId !== mgrFilt) return false;
     return true;
   });
 
   // Sort by total hours desc
-  const maxH = empIds.reduce((m, id) => Math.max(m, byEmp[id]?.total || 0), 0) || 1;
   empIds.sort((a, b) => (byEmp[b]?.total || 0) - (byEmp[a]?.total || 0));
-
   document.getElementById('empCount').textContent = empIds.length + ' employees';
 
-  if (empIds.length === 0) {
+  if (!empIds.length) {
     document.getElementById('tableWrap').innerHTML = stateHTML('ti-users', 'No employees match');
     return;
   }
 
   const rows = empIds.map(id => {
-    const w   = workers[id];
-    const d   = byEmp[id] || emptyBucket();
-    const pct = Math.round((d.total / maxH) * 100);
+    const w      = workers[id];
+    const d      = byEmp[id] || emptyBucket();
+    const total  = d.total;
+    const hasFla = d.flags.length > 0;
     const isOpen = expandedId === id;
 
-    const empRow = `<tr class="emp-row${isOpen ? ' open' : ''}" onclick="toggleExpand('${id}')">
-      <td style="width:28px;padding-left:14px"><i class="ti ti-chevron-right chevron${isOpen ? ' open' : ''}" aria-hidden="true"></i></td>
-      <td style="width:190px">
-        <div class="emp-name">${esc(w.name)}</div>
+    // 40hr bar
+    const blueW = Math.min(total, 40) / 40 * 100;
+    const redW  = total > 40 ? ((total - 40) / 40 * 100) : 0;
+    const blueStyle = `width:${blueW}%`;
+    const redLeft   = `left:${Math.min(blueW, 100)}%`;
+    const redStyle  = redW > 0 ? `width:${Math.min(redW, 100)}%;${redLeft}` : '';
+
+    const overBadge = total > 40
+      ? `<span class="over-badge"><i class="ti ti-alert-triangle" style="font-size:10px"></i> +${(total-40).toFixed(1)}h</span>`
+      : '';
+
+    const empRow = `<tr class="emp-row${isOpen ? ' open' : ''}${hasFla ? ' flagged' : ''}" onclick="toggleExpand('${id}')">
+      <td style="width:28px;padding-left:14px"><i class="ti ti-chevron-right chevron${isOpen ? ' open' : ''}"></i></td>
+      <td style="width:200px">
+        <div class="emp-name">${esc(w.name)}${hasFla ? ' <i class="ti ti-alert-triangle" style="font-size:12px;color:#D97706;margin-left:3px"></i>' : ''}</div>
         <div class="emp-title">${esc(w.title)}</div>
-        <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%"></div></div>
+        <div class="bar-outer">
+          <div class="bar-blue" style="${blueStyle}"></div>
+          ${redStyle ? `<div class="bar-red" style="${redStyle}"></div>` : ''}
+        </div>
       </td>
-      <td style="width:140px;font-size:12.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(w.dept)}</td>
-      <td class="r num" style="width:75px">${d.regular > 0.01 ? d.regular.toFixed(1) : '<span class="dim">—</span>'}</td>
-      <td class="r num" style="width:60px">${d.ot > 0.01 ? d.ot.toFixed(1) : '<span class="dim">—</span>'}</td>
-      <td class="r num" style="width:60px">${d.pto > 0.01 ? d.pto.toFixed(1) : '<span class="dim">—</span>'}</td>
-      <td class="r num" style="width:60px">${d.sick > 0.01 ? d.sick.toFixed(1) : '<span class="dim">—</span>'}</td>
-      <td class="r num" style="width:65px;font-weight:500">${d.total > 0 ? d.total.toFixed(1) : '<span class="dim" style="font-weight:400">0.0</span>'}</td>
+      <td style="width:130px;font-size:12px;color:var(--muted)">${esc(managers[w.managerId]?.name || '—')}</td>
+      <td class="r num" style="width:70px">${d.regular > 0.01 ? d.regular.toFixed(1) : '<span class="dim">—</span>'}</td>
+      <td class="r num" style="width:55px">${d.ot > 0.01 ? d.ot.toFixed(1) : '<span class="dim">—</span>'}</td>
+      <td class="r num" style="width:55px">${d.pto > 0.01 ? d.pto.toFixed(1) : '<span class="dim">—</span>'}</td>
+      <td class="r num" style="width:65px">${d.timeoff > 0.01 ? d.timeoff.toFixed(1) : '<span class="dim">—</span>'}</td>
+      <td class="r num" style="width:70px;font-weight:500">${total > 0 ? total.toFixed(1) + overBadge : '<span class="dim" style="font-weight:400">0.0</span>'}</td>
     </tr>`;
 
     let punchRows = '';
     if (isOpen) {
       punchRows = `<tr class="punch-section"><td colspan="8"><div class="punch-inner">${buildPunchTable(d.entries)}</div></td></tr>`;
     }
-
     return empRow + punchRows;
   }).join('');
 
@@ -783,22 +677,22 @@ function renderTable(byEmpArg) {
     <table>
       <thead><tr>
         <th style="width:28px"></th>
-        <th style="width:190px">Employee</th>
-        <th style="width:140px">Sub-department</th>
-        <th class="r" style="width:75px">Regular</th>
-        <th class="r" style="width:60px">OT</th>
-        <th class="r" style="width:60px">PTO</th>
-        <th class="r" style="width:60px">Sick</th>
-        <th class="r" style="width:65px">Total</th>
+        <th style="width:200px">Employee</th>
+        <th style="width:130px">Manager</th>
+        <th class="r" style="width:70px">Regular</th>
+        <th class="r" style="width:55px">OT</th>
+        <th class="r" style="width:55px">PTO</th>
+        <th class="r" style="width:65px">Time off</th>
+        <th class="r" style="width:70px">Total</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
 }
 
-/* ── Punch table (expanded) ── */
+/* ── Punch table ── */
 function buildPunchTable(entries) {
-  if (!entries || entries.length === 0) {
-    return `<div style="padding:16px 14px;font-size:12.5px;color:var(--hint)">No entries this week</div>`;
+  if (!entries || !entries.length) {
+    return `<div style="padding:14px 16px;font-size:12.5px;color:var(--hint)">No entries this week</div>`;
   }
 
   const rows = entries.map(e => {
@@ -806,49 +700,52 @@ function buildPunchTable(entries) {
       ? e.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
       : '—';
     const breakStr = e.breakHrs > 0
-      ? `<span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)">−${(e.breakHrs * 60).toFixed(0)}m</span>`
-      : '<span style="color:var(--hint)">—</span>';
+      ? `<span class="punch-time" style="color:var(--muted)">−${Math.round(e.breakHrs * 60)}m</span>`
+      : '<span class="dim">—</span>';
 
-    const totalHrs = e.segments.reduce((a, s) => a + hrsFromSegment(s), 0);
+    let typeBadge, typeLabel;
+    if (e.isTimeOff) {
+      typeBadge = e.isPaid ? 'b-pto' : 'b-toff';
+      typeLabel = e.timeOffName;
+    } else {
+      const cats = {};
+      e.segments.forEach(s => { const c = segCat(s.display_name); cats[c] = (cats[c]||0) + hrsFromSeg(s); });
+      const dom = Object.entries(cats).sort((a,b)=>b[1]-a[1])[0]?.[0] || 'other';
+      const cls = { regular:'b-reg', ot:'b-ot', pto:'b-pto', sick:'b-sick', holiday:'b-hol', timeoff:'b-toff', other:'b-oth' };
+      const lbl = { regular:'Regular', ot:'Overtime', pto:'PTO', sick:'Sick', holiday:'Holiday', timeoff:'Time off', other:'Other' };
+      typeBadge = cls[dom] || 'b-oth';
+      typeLabel = lbl[dom] || dom;
+    }
 
-    // Determine dominant category for badge
-    const catTotals = {};
-    e.segments.forEach(s => {
-      const cat = segCat(s.display_name);
-      catTotals[cat] = (catTotals[cat] || 0) + hrsFromSegment(s);
-    });
-    const domCat = Object.entries(catTotals).sort((a,b) => b[1]-a[1])[0]?.[0] || 'other';
+    const commentHtml = e.comments.map(c =>
+      `<div class="comment-tag"><i class="ti ti-message-circle"></i><span>${esc(c)}</span></div>`
+    ).join('');
 
-    const badgeCls = { regular:'b-reg', ot:'b-ot', pto:'b-pto', sick:'b-sick', holiday:'b-hol', other:'b-oth' };
-    const badgeLbl = { regular:'Regular', ot:'Overtime', pto:'PTO', sick:'Sick', holiday:'Holiday', other:'Other' };
-
-    const commentHtml = e.comments.length
-      ? e.comments.map(c =>
-          `<div class="comment-tag"><i class="ti ti-message-circle" aria-hidden="true"></i><span>${esc(c)}</span></div>`
-        ).join('')
+    const flagHtml = e.flagged
+      ? `<div style="display:inline-flex;align-items:center;gap:4px;margin-top:3px;font-size:11.5px;color:#D97706"><i class="ti ti-alert-triangle flag-icon"></i> ${e.hrs.toFixed(1)}h logged</div>`
       : '';
 
-    return `<tr>
-      <td style="width:130px">
+    return `<tr class="${e.flagged ? 'punch-flagged' : ''}">
+      <td style="width:140px">
         <div style="font-size:12px;font-weight:500">${dayLabel}</div>
-        ${commentHtml}
+        ${flagHtml}${commentHtml}
       </td>
-      <td style="width:100px"><span class="punch-time">${fmtTime(e.clockIn)}</span></td>
-      <td style="width:100px"><span class="punch-time">${fmtTime(e.clockOut)}</span></td>
-      <td style="width:70px">${breakStr}</td>
-      <td style="width:90px"><span class="badge ${badgeCls[domCat] || 'b-oth'}">${badgeLbl[domCat] || domCat}</span></td>
-      <td class="r" style="width:65px"><span class="num" style="font-weight:500">${totalHrs.toFixed(1)}</span></td>
+      <td style="width:95px"><span class="punch-time">${e.isTimeOff ? '<span class="dim">—</span>' : fmtTime(e.clockIn)}</span></td>
+      <td style="width:95px"><span class="punch-time">${e.isTimeOff ? '<span class="dim">—</span>' : fmtTime(e.clockOut)}</span></td>
+      <td style="width:65px">${e.isTimeOff ? '<span class="dim">—</span>' : breakStr}</td>
+      <td style="width:100px"><span class="badge ${typeBadge}">${esc(typeLabel)}</span></td>
+      <td class="r" style="width:60px"><span class="num" style="font-weight:500">${e.hrs.toFixed(1)}</span></td>
     </tr>`;
   }).join('');
 
   return `<table class="punch-table">
     <thead><tr>
-      <th style="width:130px">Date</th>
-      <th style="width:100px">Clock in</th>
-      <th style="width:100px">Clock out</th>
-      <th style="width:70px">Breaks</th>
-      <th style="width:90px">Type</th>
-      <th class="r" style="width:65px">Hours</th>
+      <th style="width:140px">Date</th>
+      <th style="width:95px">Clock in</th>
+      <th style="width:95px">Clock out</th>
+      <th style="width:65px">Breaks</th>
+      <th style="width:100px">Type</th>
+      <th class="r" style="width:60px">Hours</th>
     </tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
@@ -859,52 +756,50 @@ function toggleExpand(id) {
   renderTable();
 }
 
-/* ══════════════════════════════════════════════
-   Export CSV
-══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════
+   Export
+═══════════════════════════════════════ */
 function exportCSV() {
   const { start, end } = weekBounds();
-  const deptIds = deptWorkerIds();
-  const filtered = allEntries.filter(e => deptIds.has(e.worker_id || e.worker || ''));
-  const { byEmp } = processEntries(filtered);
-
-  const rows = [['Week', 'Employee', 'Title', 'Sub-department', 'Regular', 'Overtime', 'PTO', 'Sick', 'Holiday', 'Total']];
+  const { byEmp } = processAll();
+  const rows = [['Week', 'Employee', 'Title', 'Manager', 'Regular', 'Overtime', 'PTO', 'Time Off (Unpaid)', 'Sick', 'Holiday', 'Total']];
   const weekStr = `${toDateStr(start)} to ${toDateStr(end)}`;
 
-  [...deptIds]
-    .filter(id => workers[id])
+  Object.keys(workers)
     .sort((a, b) => (byEmp[b]?.total || 0) - (byEmp[a]?.total || 0))
     .forEach(id => {
       const w = workers[id];
       const d = byEmp[id] || emptyBucket();
-      rows.push([weekStr, w.name, w.title, w.dept,
+      const mgr = managers[w.managerId]?.name || '';
+      rows.push([weekStr, w.name, w.title, mgr,
         d.regular.toFixed(2), d.ot.toFixed(2), d.pto.toFixed(2),
-        d.sick.toFixed(2), d.holiday.toFixed(2), d.total.toFixed(2)]);
+        d.timeoff.toFixed(2), d.sick.toFixed(2), d.holiday.toFixed(2), d.total.toFixed(2)]);
     });
 
-  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+  const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
-  a.download = `ops-timesheets-${toDateStr(start)}.csv`;
+  a.download = `care-coordinators-${toDateStr(start)}.csv`;
   a.click();
 }
 
-/* ══════════════════════════════════════════════
+/* ═══════════════════════════════════════
    UI helpers
-══════════════════════════════════════════════ */
+═══════════════════════════════════════ */
 function setLoading() {
   document.getElementById('tableWrap').innerHTML = `<div class="state-view"><div class="spinner"></div><span>Loading…</span></div>`;
   document.getElementById('metricsGrid').innerHTML = '';
+  document.getElementById('flagBanner').style.display = 'none';
 }
 function showError(msg) {
   document.getElementById('tableWrap').innerHTML = stateHTML('ti-alert-circle', esc(msg), true);
   document.getElementById('statusLine').textContent = 'Error';
 }
 function stateHTML(icon, msg, err) {
-  return `<div class="state-view${err ? ' err' : ''}"><i class="ti ${icon}" aria-hidden="true"></i><span>${msg}</span></div>`;
+  return `<div class="state-view${err ? ' err' : ''}"><i class="ti ${icon}"></i><span>${msg}</span></div>`;
 }
 function esc(s) {
-  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 </script>
 </body>
