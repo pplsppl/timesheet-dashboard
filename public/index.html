@@ -489,8 +489,8 @@ function processAll() {
       });
     }
 
-    // Flag if any day > 10.5 hours
-    const flagged = entryHrs > 10.5;
+    // Flag if any day > 10 hours
+    const flagged = entryHrs > 10;
     if (flagged) byEmp[wid].flags.push({ type: 'over8', date: entry.start_time, hrs: entryHrs });
 
     byEmp[wid].entries.push({
@@ -507,45 +507,33 @@ function processAll() {
     });
   });
 
-  // Time off entries — merge into byEmp
+  // Time off entries — already flattened to one record per day by the server
   timeOff.forEach(to => {
-    const wid = to.worker_id || to.worker || to.employee_id || 'unknown';
+    const wid = to.worker_id || 'unknown';
     if (!byEmp[wid]) byEmp[wid] = emptyBucket();
 
-    // Duration from start/end or duration field
-    let hrs = 0;
-    if (to.start_time && to.end_time) {
-      hrs = (new Date(to.end_time) - new Date(to.start_time)) / 3_600_000;
-    } else if (to.duration) {
-      hrs = typeof to.duration === 'number' ? to.duration : parseFloat(to.duration) || 0;
-    } else if (to.hours) {
-      hrs = parseFloat(to.hours) || 0;
-    }
-
+    const hrs = to.hours || 0;
     if (hrs <= 0) return;
 
-    // Categorise: paid vs unpaid
-    const isPaid = to.is_paid === true || (to.is_paid !== false && (to.type || '').toLowerCase().includes('paid'));
-    const cat = isPaid ? 'pto' : 'timeoff';
-
-    byEmp[wid][cat] = (byEmp[wid][cat] || 0) + hrs;
+    // All leave requests are treated as PTO (approved time off)
+    byEmp[wid].pto += hrs;
     byEmp[wid].total += hrs;
-    totals[cat] = (totals[cat] || 0) + hrs;
+    totals.pto += hrs;
     totals.total += hrs;
 
     byEmp[wid].entries.push({
-      id: to.id,
-      date: to.start_time ? new Date(to.start_time) : null,
-      clockIn:  to.start_time,
-      clockOut: to.end_time,
+      id: to.date + '-' + wid,
+      date: to.date ? new Date(to.date + 'T12:00:00') : null,
+      clockIn:  null,
+      clockOut: null,
       breakHrs: 0,
       hrs,
       flagged: false,
       segments: [],
-      comments: [],
+      comments: to.reason ? [to.reason] : [],
       isTimeOff: true,
-      timeOffName: to.name || to.type || 'Time off',
-      isPaid,
+      timeOffName: 'Time off',
+      isPaid: true,
     });
   });
 
@@ -592,7 +580,7 @@ function renderFlagBanner(byEmp) {
   if (!flags.length) { banner.style.display = 'none'; return; }
 
   banner.style.display = 'block';
-  document.getElementById('flagTitle').textContent = `${flags.length} entr${flags.length === 1 ? 'y' : 'ies'} over 10.5 hours — review required`;
+  document.getElementById('flagTitle').textContent = `${flags.length} entr${flags.length === 1 ? 'y' : 'ies'} over 8 hours — review required`;
   document.getElementById('flagBody').innerHTML = flags.map(f => `
     <div class="flag-row">
       <i class="ti ti-clock-exclamation"></i>

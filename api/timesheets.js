@@ -103,45 +103,28 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ results: careCoords, managers: managerMap });
 
     } else if (endpoint === 'timeoff') {
-      // Time off entries — separate endpoint from time entries
+      // Leave requests — paginate all, then filter to approved + days within the week
       if (!startDate || !endDate) return res.status(400).json({ error: 'startDate and endDate required.' });
 
-      const filter = encodeURIComponent(
-        `start_time ge ${startDate}T00:00:00 and start_time le ${endDate}T23:59:59`
-      );
+      const all = await fetchAllPages(`${BASE}/leave-requests`, apiKey);
 
-      // Try known time-off endpoint variants
-      let results = [];
-      const endpoints = [
-        `${BASE}/time-off-entries?filter=${filter}`,
-        `${BASE}/time-off-requests?filter=${filter}`,
-        `${BASE}/leave-requests?filter=${filter}`,
-      ];
-
-      for (const url of endpoints) {
-        try {
-          const r = await fetch(url, {
-            headers: { Authorization: `Bearer ${apiKey}`, Accept: 'application/json' },
-          });
-          if (r.ok) {
-            const data = await r.json();
-            const page = Array.isArray(data) ? data : (data.results || []);
-            if (page.length >= 0) { // endpoint exists even if empty
-              results = page;
-              // paginate if needed
-              let next = data.next_link || null;
-              while (next) {
-                const nr = await fetch(next, { headers: { Authorization: `Bearer ${apiKey}` } });
-                if (!nr.ok) break;
-                const nd = await nr.json();
-                results.push(...(Array.isArray(nd) ? nd : (nd.results || [])));
-                next = nd.next_link || null;
-              }
-              break; // found working endpoint
-            }
+      // Only APPROVED requests, and only days_take_off entries within the requested week
+      const results = [];
+      all.forEach(req => {
+        if (req.status !== 'APPROVED') return;
+        const wid = req.worker_id;
+        (req.days_take_off || []).forEach(day => {
+          if (day.date >= startDate && day.date <= endDate) {
+            results.push({
+              worker_id: wid,
+              date: day.date,
+              hours: (day.number_of_minutes_taken_off || 0) / 60,
+              leave_type_id: req.leave_type_id,
+              reason: req.reason_for_leave || null,
+            });
           }
-        } catch { continue; }
-      }
+        });
+      });
 
       return res.status(200).json({ results });
 
