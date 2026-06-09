@@ -16,8 +16,8 @@ const { put } = require('@vercel/blob');
 const BASE        = 'https://rest.ripplingapis.com';
 const TARGET_DEPT = 'Care Coordinators';
 
-// How many weeks back to cache (current week + N prior)
-const WEEKS_BACK = 4;
+// Only cache current week in cron — past weeks cached on-demand by timesheets.js
+const WEEKS_BACK = 0;
 
 async function fetchAllPages(url, apiKey) {
   const results = [];
@@ -38,15 +38,15 @@ async function fetchAllPages(url, apiKey) {
 }
 
 function getWeekBounds(offsetFromNow = 0) {
-  const now   = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const sunDate = today.getDate() - today.getDay() + (offsetFromNow * 7);
-  const sun   = new Date(today.getFullYear(), today.getMonth(), sunDate, 0, 0, 0, 0);
-  const sat   = new Date(today.getFullYear(), today.getMonth(), sunDate + 6, 23, 59, 59, 999);
-  return {
-    start: sun.toISOString().split('T')[0],
-    end:   sat.toISOString().split('T')[0],
-  };
+  const now = new Date();
+  // Use UTC to avoid timezone issues on Vercel servers (runs in UTC)
+  const utcDay = now.getUTCDay(); // 0=Sun, 6=Sat
+  const msPerDay = 86400000;
+  const sundayMs = now.getTime() - (utcDay * msPerDay) + (offsetFromNow * 7 * msPerDay);
+  const sun = new Date(sundayMs);
+  const sat = new Date(sundayMs + (6 * msPerDay));
+  const fmt = d => d.toISOString().split('T')[0];
+  return { start: fmt(sun), end: fmt(sat) };
 }
 
 module.exports = async function handler(req, res) {
@@ -119,21 +119,13 @@ module.exports = async function handler(req, res) {
     for (let offset = 0; offset >= -WEEKS_BACK; offset--) {
       const { start, end } = getWeekBounds(offset);
       try {
-        // Fetch time entries for each Care Coordinator in parallel
-        // This avoids pulling the entire company's time entries
-        const dateFilter = encodeURIComponent(
+        // Fetch all time entries for the week, filter to Care Coordinators in memory
+        const ccWorkerIds = new Set(careCoords.map(w => w.id));
+        const filter = encodeURIComponent(
           `start_time ge ${start}T00:00:00 and start_time le ${end}T23:59:59`
         );
-        const workerEntryArrays = await Promise.all(
-          careCoords.map(w => {
-            const f = encodeURIComponent(
-              `start_time ge ${start}T00:00:00 and start_time le ${end}T23:59:59 and worker_id eq "${w.id}"`
-            );
-            return fetchAllPages(`${BASE}/time-entries?filter=${f}`, apiKey)
-              .catch(() => []);
-          })
-        );
-        const timeEntries = workerEntryArrays.flat();
+        const allEntries = await fetchAllPages(`${BASE}/time-entries?filter=${filter}`, apiKey);
+        const timeEntries = allEntries.filter(e => ccWorkerIds.has(e.worker_id || e.worker || ''));
 
         // Leave — filter from already-fetched full list
         const leaveForWeek = [];
