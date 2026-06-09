@@ -264,9 +264,9 @@
     <div class="metrics-row" id="leaveMetrics"></div>
     <div class="metric-divider"></div>
     <div class="bar-legend">
-      <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Worked hours (40hr target)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Worked hours (40hr target FT · 28hr target PT)</div>
       <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Leave (not counted toward OT)</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Overtime (over 40h worked)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Overtime (over 40h FT · over 28h PT)</div>
     </div>
   </div>
 
@@ -711,11 +711,13 @@ function renderTable(byEmpArg) {
     const target    = weekTarget(w.employmentTypeId);
     const typeLabel = empTypeLabel(w.employmentTypeId);
 
-    // Bar uses employment-type target: 40hr (FT) or 28hr (PT). Null = salaried, no bar.
-    const blueW     = target ? Math.min(worked, target) / target * 100 : 0;
-    const overW     = target && worked > target ? (worked - target) / target * 100 : 0;
-    const greenW    = target ? Math.min(leave / target * 100, 100 - Math.min(blueW + overW, 100)) : 0;
-    const greenLeft = Math.min(blueW + overW, 100);
+    // Bar: scale is max(worked+leave, target) so everything fits within the bar width
+    // Blue = worked up to target, Red = worked over target, Green = leave
+    const barScale  = target ? Math.max(worked + leave, target) : 1;
+    const blueW     = target ? Math.min(worked, target) / barScale * 100 : 0;
+    const overW     = target && worked > target ? (worked - target) / barScale * 100 : 0;
+    const greenW    = target ? leave / barScale * 100 : 0;
+    const greenLeft = blueW + overW;
 
     const overBadge = target && worked > target
       ? `<span class="over-badge"><i class="ti ti-alert-triangle" style="font-size:10px"></i> +${(worked-target).toFixed(1)}h</span>`
