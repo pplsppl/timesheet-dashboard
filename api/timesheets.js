@@ -162,15 +162,19 @@ module.exports = async function handler(req, res) {
       const ccWorkers = allWorkers.filter(w =>
         w.status === 'ACTIVE' && (w.department?.name || '') === 'Care Coordinators'
       );
-      const workerFilter = ccWorkers.map(w => `"${w.id}"`).join(',');
-      const filter = encodeURIComponent(
-        `start_time ge ${startDate}T00:00:00 and start_time le ${endDate}T23:59:59 and worker_id in [${workerFilter}]`
-      );
-      const [timeEntries, allLeave, leaveTypes] = await Promise.all([
-        fetchAllPages(`${BASE}/time-entries?filter=${filter}`, apiKey),
+      // Fetch time entries per worker in parallel using worker_id eq filter
+      const [workerEntryArrays, allLeave, leaveTypes] = await Promise.all([
+        Promise.all(ccWorkers.map(w => {
+          const f = encodeURIComponent(
+            `start_time ge ${startDate}T00:00:00 and start_time le ${endDate}T23:59:59 and worker_id eq "${w.id}"`
+          );
+          return fetchAllPages(`${BASE}/time-entries?filter=${f}`, apiKey).catch(() => []);
+        })),
         fetchAllPages(`${BASE}/leave-requests`, apiKey),
         fetchAllPages(`${BASE}/leave-types`, apiKey),
       ]);
+
+      const timeEntries = workerEntryArrays.flat();
 
       const leaveTypeMap = {};
       leaveTypes.forEach(lt => { leaveTypeMap[lt.id] = { name: lt.name, isPaid: lt.is_paid === true }; });
@@ -197,7 +201,8 @@ module.exports = async function handler(req, res) {
 
       // Write to cache in background (don't await — return to client immediately)
       const payload = JSON.stringify({ timeEntries, leaveRequests, cachedAt: new Date().toISOString() });
-      put(`cache/week-${startDate}.json`, payload, { allowOverwrite: true, contentType: 'application/json',
+      put(`cache/week-${startDate}.json`, payload, {
+        access: 'private', allowOverwrite: true, contentType: 'application/json',
         token: process.env.BLOB_READ_WRITE_TOKEN,
       }).catch(err => console.error('[cache write]', err.message));
 
