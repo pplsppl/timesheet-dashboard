@@ -115,13 +115,17 @@ module.exports = async function handler(req, res) {
       token: process.env.BLOB_READ_WRITE_TOKEN,
     });
 
+    // Build comma-separated list of Care Coordinator worker IDs for filtering
+    const workerIdList = careCoords.map(w => w.id).join(',');
+
     // ── 5. For each week, fetch time entries + filter leave requests ──
     for (let offset = 0; offset >= -WEEKS_BACK; offset--) {
       const { start, end } = getWeekBounds(offset);
       try {
-        // Time entries — supports date filter, fast
+        // Filter time entries by date AND worker_id to only get Care Coordinator entries
+        // This avoids fetching the entire company's time entries
         const filter = encodeURIComponent(
-          `start_time ge ${start}T00:00:00 and start_time le ${end}T23:59:59`
+          `start_time ge ${start}T00:00:00 and start_time le ${end}T23:59:59 and worker_id in [${careCoords.map(w => `"${w.id}"`).join(',')}]`
         );
         const timeEntries = await fetchAllPages(
           `${BASE}/time-entries?filter=${filter}`, apiKey

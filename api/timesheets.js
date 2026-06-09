@@ -157,8 +157,14 @@ module.exports = async function handler(req, res) {
       }
 
       // Cache miss — fetch live and write to cache for next time
+      // Get Care Coordinator worker IDs first so we only fetch their time entries
+      const allWorkers = await fetchAllPages(`${BASE}/workers?expand=department`, apiKey);
+      const ccWorkers = allWorkers.filter(w =>
+        w.status === 'ACTIVE' && (w.department?.name || '') === 'Care Coordinators'
+      );
+      const workerFilter = ccWorkers.map(w => `"${w.id}"`).join(',');
       const filter = encodeURIComponent(
-        `start_time ge ${startDate}T00:00:00 and start_time le ${endDate}T23:59:59`
+        `start_time ge ${startDate}T00:00:00 and start_time le ${endDate}T23:59:59 and worker_id in [${workerFilter}]`
       );
       const [timeEntries, allLeave, leaveTypes] = await Promise.all([
         fetchAllPages(`${BASE}/time-entries?filter=${filter}`, apiKey),
