@@ -50,10 +50,7 @@ async function readBlob(filename) {
     const { blobs } = await list({ prefix: filename });
     const blob = blobs.find(b => b.pathname === filename);
     if (!blob) return null;
-    // Private blobs need the token passed as a header
-    const r = await fetch(blob.url, {
-      headers: { Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` }
-    });
+    const r = await fetch(blob.url);
     if (!r.ok) return null;
     return r.json();
   } catch { return null; }
@@ -187,7 +184,7 @@ module.exports = async function handler(req, res) {
       // Write to cache in background (don't await — return to client immediately)
       const payload = JSON.stringify({ timeEntries, leaveRequests, cachedAt: new Date().toISOString() });
       put(`cache/week-${startDate}.json`, payload, {
-        access: 'private', allowOverwrite: true, contentType: 'application/json',
+        access: 'public', allowOverwrite: true, contentType: 'application/json',
       }).catch(err => console.error('[cache write]', err.message));
 
       return res.status(200).json({ timeEntries, leaveRequests, fromCache: false });
