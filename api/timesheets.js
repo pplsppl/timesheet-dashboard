@@ -47,11 +47,13 @@ function verifySession(cookieHeader, secret) {
 
 async function readBlob(filename) {
   try {
-    // List blobs to find the URL for this filename
     const { blobs } = await list({ prefix: filename });
     const blob = blobs.find(b => b.pathname === filename);
     if (!blob) return null;
-    const r = await fetch(blob.url);
+    // Private blobs need the token passed as a header
+    const r = await fetch(blob.url, {
+      headers: { Authorization: `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}` }
+    });
     if (!r.ok) return null;
     return r.json();
   } catch { return null; }
@@ -185,7 +187,7 @@ module.exports = async function handler(req, res) {
       // Write to cache in background (don't await — return to client immediately)
       const payload = JSON.stringify({ timeEntries, leaveRequests, cachedAt: new Date().toISOString() });
       put(`cache/week-${startDate}.json`, payload, {
-        access: 'public', allowOverwrite: true, contentType: 'application/json',
+        access: 'private', allowOverwrite: true, contentType: 'application/json',
       }).catch(err => console.error('[cache write]', err.message));
 
       return res.status(200).json({ timeEntries, leaveRequests, fromCache: false });
