@@ -441,12 +441,12 @@ async function refreshData() {
 ═══════════════════════════════════ */
 function weekBounds(offset = weekOffset) {
   const now = new Date();
+  // Start: most recent Sunday (day 0)
   const sun = new Date(now);
-  sun.setDate(now.getDate() - now.getDay() + offset * 7);
-  sun.setHours(0,0,0,0);
-  const sat = new Date(sun);
-  sat.setDate(sun.getDate() + 6);
-  sat.setHours(23,59,59,999);
+  sun.setDate(now.getDate() - now.getDay() + (offset * 7));
+  sun.setHours(0, 0, 0, 0);
+  // End: that same Sunday + 6 days = Saturday
+  const sat = new Date(sun.getFullYear(), sun.getMonth(), sun.getDate() + 6, 23, 59, 59, 999);
   return { start: sun, end: sat };
 }
 function toDateStr(d) { return d.toISOString().split('T')[0]; }
