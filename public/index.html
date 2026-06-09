@@ -391,7 +391,7 @@ async function loadAll() {
       const n = u.name || {};
       const name = [n.given_name || n.preferred_given_name || '', n.family_name || n.preferred_family_name || ''].filter(Boolean).join(' ')
         || u.display_name || w.work_email || w.id;
-      workers[w.id] = { name, title: w.title || '—', managerId: w.manager_id || null };
+      workers[w.id] = { name, title: w.title || '—', managerId: w.manager_id || null, employmentTypeId: w.employment_type_id || null };
     });
 
     timeEntries = wkRes.timeEntries   || [];
@@ -476,6 +476,22 @@ function populateManagerFilter() {
 /* ═══════════════════════════════════
    Segment category (for worked time)
 ═══════════════════════════════════ */
+// Employment type IDs from Rippling
+const HOURLY_FT_ID = '64cc115cf2b341a468e41d24'; // 40hr target
+const HOURLY_PT_ID = '64cc115cf2b341a468e41d27'; // 28hr target
+
+function weekTarget(employmentTypeId) {
+  if (employmentTypeId === HOURLY_FT_ID) return 40;
+  if (employmentTypeId === HOURLY_PT_ID) return 28;
+  return null; // salaried/contractor — no bar
+}
+
+function empTypeLabel(employmentTypeId) {
+  if (employmentTypeId === HOURLY_FT_ID) return 'Hourly FT';
+  if (employmentTypeId === HOURLY_PT_ID) return 'Hourly PT';
+  return null;
+}
+
 function segCat(name) {
   const n = (name || '').toLowerCase();
   if (n.includes('regular'))                               return 'regular';
@@ -543,12 +559,14 @@ function processAll() {
 
     byEmp[wid].entries.push({
       id:        entry.id,
+      workerId:  wid,
       date:      entry.start_time ? new Date(entry.start_time) : null,
       clockIn:   entry.start_time,
       clockOut:  entry.end_time,
       breakHrs,
       hrs:       entryHrs,
       flagged,
+      status:    entry.status || '',
       segments:  segs,
       comments:  (entry.comments || []).map(c => c.text).filter(Boolean),
       isLeave:   false,
@@ -686,26 +704,28 @@ function renderTable(byEmpArg) {
   const rows = empIds.map(id => {
     const w      = workers[id];
     const d      = byEmp[id] || emptyBucket();
-    const worked = d.workedTotal;
-    const leave  = d.leaveTotal;
-    const isOpen = expandedId === id;
-    const hasFla = d.flags.length > 0;
+    const worked    = d.workedTotal;
+    const leave     = d.leaveTotal;
+    const isOpen    = expandedId === id;
+    const hasFla    = d.flags.length > 0;
+    const target    = weekTarget(w.employmentTypeId);
+    const typeLabel = empTypeLabel(w.employmentTypeId);
 
-    // Bar: blue = worked (capped at 40), green = leave, red = overtime beyond 40
-    const blueW  = Math.min(worked, 40) / 40 * 100;
-    const overW  = worked > 40 ? (worked - 40) / 40 * 100 : 0;
-    const greenW = Math.min(leave / 40 * 100, 100 - Math.min(blueW + overW, 100));
+    // Bar uses employment-type target: 40hr (FT) or 28hr (PT). Null = salaried, no bar.
+    const blueW     = target ? Math.min(worked, target) / target * 100 : 0;
+    const overW     = target && worked > target ? (worked - target) / target * 100 : 0;
+    const greenW    = target ? Math.min(leave / target * 100, 100 - Math.min(blueW + overW, 100)) : 0;
     const greenLeft = Math.min(blueW + overW, 100);
 
-    const overBadge = worked > 40
-      ? `<span class="over-badge"><i class="ti ti-alert-triangle" style="font-size:10px"></i> +${(worked-40).toFixed(1)}h</span>`
+    const overBadge = target && worked > target
+      ? `<span class="over-badge"><i class="ti ti-alert-triangle" style="font-size:10px"></i> +${(worked-target).toFixed(1)}h</span>`
       : '';
 
     return `<tr class="emp-row${isOpen?' open':''}${hasFla?' flagged':''}" onclick="toggleExpand('${id}')">
       <td style="width:28px;padding-left:14px"><i class="ti ti-chevron-right chevron${isOpen?' open':''}"></i></td>
       <td style="width:200px">
         <div class="emp-name">${esc(w.name)}${hasFla?' <i class="ti ti-alert-triangle" style="font-size:12px;color:#D97706;margin-left:3px"></i>':''}</div>
-        <div class="emp-title">${esc(w.title)}</div>
+        <div class="emp-title">${esc(w.title)}${typeLabel ? ` <span style="font-size:10.5px;color:var(--hint);margin-left:4px">${typeLabel}</span>` : ''}</div>
         <div class="bar-outer">
           <div class="bar-blue"  style="width:${blueW.toFixed(1)}%"></div>
           ${overW  > 0 ? `<div class="bar-red"   style="left:${Math.min(blueW,100).toFixed(1)}%;width:${overW.toFixed(1)}%"></div>` : ''}
@@ -782,6 +802,11 @@ function buildPunchTable(entries) {
       `<div class="comment-tag"><i class="ti ti-message-circle"></i><span>${esc(c)}</span></div>`
     ).join('');
 
+    const canApprove = e.status === 'DRAFT' || e.status === 'draft';
+    const isApproved = e.status === 'APPROVED' || e.status === 'FINALIZED';
+    const approveBtn = canApprove
+      ? `<button onclick="approveEntry('${e.id}', '${e.workerId}', this)" style="font-size:11px;padding:3px 9px;border:0.5px solid var(--accent);border-radius:var(--r);background:none;color:var(--accent);cursor:pointer;font-family:inherit;font-weight:500;">Approve</button>`
+      : isApproved ? `<span style="font-size:11px;color:var(--green);font-weight:500">✓ Approved</span>` : '';
     return `<tr class="${e.flagged ? 'punch-flagged' : ''}">
       <td style="width:140px"><div style="font-size:12px;font-weight:500">${dayLabel}</div>${flagHtml}${commentHtml}</td>
       <td style="width:95px"><span class="punch-time">${fmtTime(e.clockIn) || '—'}</span></td>
@@ -789,6 +814,7 @@ function buildPunchTable(entries) {
       <td style="width:65px">${breakStr}</td>
       <td style="width:100px"><span class="badge ${badgeCls}">${badgeLbl}</span></td>
       <td class="r" style="width:60px"><span class="num" style="font-weight:500">${e.hrs.toFixed(1)}</span></td>
+      <td style="width:80px;text-align:center">${approveBtn}</td>
     </tr>`;
   }).join('');
 
@@ -800,6 +826,7 @@ function buildPunchTable(entries) {
       <th style="width:65px">Breaks</th>
       <th style="width:100px">Type</th>
       <th class="r" style="width:60px">Hours</th>
+      <th style="width:80px;text-align:center">Approval</th>
     </tr></thead>
     <tbody>${rows}</tbody>
   </table>`;
@@ -808,6 +835,33 @@ function buildPunchTable(entries) {
 function toggleExpand(id) {
   expandedId = expandedId === id ? null : id;
   renderTable();
+}
+
+/* ═══════════════════════════════════
+   Approve entry
+═══════════════════════════════════ */
+async function approveEntry(entryId, workerId, btn) {
+  btn.disabled = true;
+  btn.textContent = 'Approving…';
+  try {
+    const r = await fetch('/api/approve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ entryId, workerId }),
+    });
+    const data = await r.json();
+    if (r.ok && data.ok) {
+      btn.outerHTML = `<span style="font-size:11px;color:var(--green);font-weight:500">✓ Approved</span>`;
+    } else {
+      btn.disabled = false;
+      btn.textContent = 'Approve';
+      alert('Approval failed: ' + (data.error || 'Unknown error'));
+    }
+  } catch (e) {
+    btn.disabled = false;
+    btn.textContent = 'Approve';
+    alert('Network error — please try again.');
+  }
 }
 
 /* ═══════════════════════════════════
