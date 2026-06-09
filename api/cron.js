@@ -112,6 +112,7 @@ module.exports = async function handler(req, res) {
       access: 'public',
       allowOverwrite: true,
       contentType: 'application/json',
+      token: process.env.BLOB_READ_WRITE_TOKEN,
     });
 
     // ── 5. For each week, fetch time entries + filter leave requests ──
@@ -158,6 +159,7 @@ module.exports = async function handler(req, res) {
           access: 'public',
           allowOverwrite: true,
           contentType: 'application/json',
+          token: process.env.BLOB_READ_WRITE_TOKEN,
         });
 
         results.weeks.push({ week: start, timeEntries: timeEntries.length, leave: leaveForWeek.length });
