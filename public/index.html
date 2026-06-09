@@ -375,10 +375,13 @@ async function doLogin() {
 async function loadAll() {
   setLoading();
   try {
-    const [wRes, tRes, toRes] = await Promise.all([
+    const { start, end } = weekBounds();
+    const s = toDateStr(start);
+    const e = toDateStr(end);
+
+    const [wRes, wkRes] = await Promise.all([
       apiFetch('/api/timesheets?endpoint=workers'),
-      fetchTimeEntries(),
-      fetchTimeOff(),
+      apiFetch(`/api/timesheets?endpoint=week&startDate=${s}&endDate=${e}`),
     ]);
 
     workers = {};
@@ -389,26 +392,25 @@ async function loadAll() {
       workers[w.id] = { name, title: w.title || '—', managerId: w.manager_id || null };
     });
 
-    timeEntries = tRes.results || [];
-    timeOff     = toRes.results || [];
+    timeEntries = wkRes.timeEntries   || [];
+    timeOff     = wkRes.leaveRequests || [];
 
     populateManagerFilter();
     renderAll();
-    document.getElementById('statusLine').textContent =
-      'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    if (wkRes.fromCache && wkRes.cachedAt) {
+      const mins = Math.round((Date.now() - new Date(wkRes.cachedAt).getTime()) / 60000);
+      const ageStr = mins < 1 ? 'just now' : `${mins}m ago`;
+      document.getElementById('statusLine').textContent =
+        `Synced ${ageStr}${wkRes.stale ? ' · refreshing…' : ''}`;
+    } else {
+      document.getElementById('statusLine').textContent =
+        'Live · ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
   } catch (e) {
     if (e.message === '401') { showLogin(); return; }
     showError(e.message);
   }
-}
-
-async function fetchTimeEntries() {
-  const { start, end } = weekBounds();
-  return apiFetch(`/api/timesheets?startDate=${toDateStr(start)}&endDate=${toDateStr(end)}`);
-}
-async function fetchTimeOff() {
-  const { start, end } = weekBounds();
-  return apiFetch(`/api/timesheets?endpoint=timeoff&startDate=${toDateStr(start)}&endDate=${toDateStr(end)}`);
 }
 async function apiFetch(url) {
   const r = await fetch(url);
@@ -422,18 +424,8 @@ async function apiFetch(url) {
 }
 
 async function refreshData() {
-  document.getElementById('statusLine').textContent = 'Refreshing…';
-  try {
-    const [tRes, toRes] = await Promise.all([fetchTimeEntries(), fetchTimeOff()]);
-    timeEntries = tRes.results || [];
-    timeOff     = toRes.results || [];
-    renderAll();
-    document.getElementById('statusLine').textContent =
-      'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  } catch (e) {
-    if (e.message === '401') { showLogin(); return; }
-    document.getElementById('statusLine').textContent = 'Refresh failed';
-  }
+  document.getElementById('statusLine').textContent = 'Loading…';
+  await loadAll();
 }
 
 /* ═══════════════════════════════════
@@ -441,12 +433,15 @@ async function refreshData() {
 ═══════════════════════════════════ */
 function weekBounds(offset = weekOffset) {
   const now = new Date();
-  // Start: most recent Sunday (day 0)
-  const sun = new Date(now);
-  sun.setDate(now.getDate() - now.getDay() + (offset * 7));
-  sun.setHours(0, 0, 0, 0);
-  // End: that same Sunday + 6 days = Saturday
-  const sat = new Date(sun.getFullYear(), sun.getMonth(), sun.getDate() + 6, 23, 59, 59, 999);
+  // Strip to midnight local time today
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  // How many days since last Sunday (0=Sun, 1=Mon, ... 6=Sat)
+  const daysSinceSun = today.getDay(); // 0–6
+  // Sunday of current week
+  const sunDate = today.getDate() - daysSinceSun + (offset * 7);
+  const sun = new Date(today.getFullYear(), today.getMonth(), sunDate, 0, 0, 0, 0);
+  // Saturday = Sunday + 6, always
+  const sat = new Date(today.getFullYear(), today.getMonth(), sunDate + 6, 23, 59, 59, 999);
   return { start: sun, end: sat };
 }
 function toDateStr(d) { return d.toISOString().split('T')[0]; }

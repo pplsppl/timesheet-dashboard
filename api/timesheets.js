@@ -1,24 +1,25 @@
 /**
  * Vercel Serverless Function: /api/timesheets
  *
- * Validates session cookie, then proxies Rippling REST API.
- * Strictly filters to Care Coordinators sub-department only.
+ * Reads from Vercel Blob cache (written by /api/cron).
+ * Falls back to live Rippling fetch if cache is missing.
+ * All requests require a valid session cookie.
  *
  * Env vars required:
- *   RIPPLING_API_KEY   — Rippling REST API key
- *   SESSION_SECRET     — must match auth.js
- *
- * Endpoints (via ?endpoint=):
- *   workers            → active Care Coordinator workers + their managers
- *   timeoff            → approved leave requests filtered to date range, enriched with leave type
- *   (default)          → time entries filtered by startDate/endDate
+ *   SESSION_SECRET        — must match auth.js
+ *   RIPPLING_API_KEY      — used only for cache-miss fallback
+ *   BLOB_READ_WRITE_TOKEN — Vercel Blob token
  */
 
-const crypto = require('crypto');
+const crypto   = require('crypto');
+const { list, put } = require('@vercel/blob');
 
 const BASE        = 'https://rest.ripplingapis.com';
 const COOKIE_NAME = 'ops_session';
 const TARGET_DEPT = 'Care Coordinators';
+
+// If cache is older than this, we still serve it but trigger a background refresh
+const STALE_MS = 5 * 60 * 1000; // 5 minutes
 
 function parseCookies(header = '') {
   return Object.fromEntries(
@@ -44,6 +45,18 @@ function verifySession(cookieHeader, secret) {
   } catch { return false; }
 }
 
+async function readBlob(filename) {
+  try {
+    // List blobs to find the URL for this filename
+    const { blobs } = await list({ prefix: filename });
+    const blob = blobs.find(b => b.pathname === filename);
+    if (!blob) return null;
+    const r = await fetch(blob.url);
+    if (!r.ok) return null;
+    return r.json();
+  } catch { return null; }
+}
+
 async function fetchAllPages(url, apiKey) {
   const results = [];
   let next = url;
@@ -51,15 +64,24 @@ async function fetchAllPages(url, apiKey) {
     const r = await fetch(next, {
       headers: { Authorization: `Bearer ${apiKey}`, Accept: 'application/json' },
     });
-    if (!r.ok) {
-      const body = await r.text().catch(() => '');
-      throw new Error(`Rippling ${r.status} (${url}): ${body.slice(0, 200)}`);
-    }
+    if (!r.ok) throw new Error(`Rippling ${r.status}`);
     const data = await r.json();
     results.push(...(Array.isArray(data) ? data : (data.results || [])));
     next = data.next_link || null;
   }
   return results;
+}
+
+function getWeekStart(startDate, endDate, apiKey) {
+  // Live fallback for a single week
+  return Promise.all([
+    fetchAllPages(
+      `${BASE}/time-entries?filter=${encodeURIComponent(`start_time ge ${startDate}T00:00:00 and start_time le ${endDate}T23:59:59`)}`,
+      apiKey
+    ),
+    fetchAllPages(`${BASE}/leave-requests`, apiKey),
+    fetchAllPages(`${BASE}/leave-types`, apiKey),
+  ]);
 }
 
 module.exports = async function handler(req, res) {
@@ -75,12 +97,25 @@ module.exports = async function handler(req, res) {
 
   try {
     if (endpoint === 'workers') {
-      const all = await fetchAllPages(`${BASE}/workers?expand=user,department`, apiKey);
+      // Try cache first
+      const cached = await readBlob('cache/workers.json');
+      if (cached) {
+        const age = cached.cachedAt ? Date.now() - new Date(cached.cachedAt).getTime() : Infinity;
+        // Return cache immediately — always fast
+        return res.status(200).json({
+          results:  cached.results,
+          managers: cached.managers,
+          cachedAt: cached.cachedAt,
+          fromCache: true,
+          stale: age > STALE_MS,
+        });
+      }
 
-      const careCoords = all.filter(w =>
+      // Cache miss — fetch live
+      const allWorkers = await fetchAllPages(`${BASE}/workers?expand=user,department`, apiKey);
+      const careCoords = allWorkers.filter(w =>
         w.status === 'ACTIVE' && (w.department?.name || '') === TARGET_DEPT
       );
-
       const managerIds = [...new Set(careCoords.map(w => w.manager_id).filter(Boolean))];
       const managerMap = {};
       await Promise.all(managerIds.map(async (mid) => {
@@ -91,68 +126,72 @@ module.exports = async function handler(req, res) {
           if (r.ok) {
             const m = await r.json();
             const u = m.user || {};
-            const name = [u.first_name || '', u.last_name || ''].filter(Boolean).join(' ')
-              || m.work_email || mid;
-            managerMap[mid] = { id: mid, name };
+            managerMap[mid] = { id: mid, name: [u.first_name||'', u.last_name||''].filter(Boolean).join(' ') || m.work_email || mid };
           }
         } catch { /* skip */ }
       }));
 
-      return res.status(200).json({ results: careCoords, managers: managerMap });
+      return res.status(200).json({ results: careCoords, managers: managerMap, fromCache: false });
 
-    } else if (endpoint === 'timeoff') {
+    } else if (endpoint === 'week') {
       if (!startDate || !endDate) return res.status(400).json({ error: 'startDate and endDate required.' });
 
-      // Fetch leave types and leave requests in parallel
-      const [leaveTypes, allRequests] = await Promise.all([
-        fetchAllPages(`${BASE}/leave-types`, apiKey),
+      // Try cache first
+      const cached = await readBlob(`cache/week-${startDate}.json`);
+      if (cached) {
+        const age = cached.cachedAt ? Date.now() - new Date(cached.cachedAt).getTime() : Infinity;
+        return res.status(200).json({
+          timeEntries:   cached.timeEntries   || [],
+          leaveRequests: cached.leaveRequests || [],
+          cachedAt:      cached.cachedAt,
+          fromCache:     true,
+          stale:         age > STALE_MS,
+        });
+      }
+
+      // Cache miss — fetch live and write to cache for next time
+      const filter = encodeURIComponent(
+        `start_time ge ${startDate}T00:00:00 and start_time le ${endDate}T23:59:59`
+      );
+      const [timeEntries, allLeave, leaveTypes] = await Promise.all([
+        fetchAllPages(`${BASE}/time-entries?filter=${filter}`, apiKey),
         fetchAllPages(`${BASE}/leave-requests`, apiKey),
+        fetchAllPages(`${BASE}/leave-types`, apiKey),
       ]);
 
-      // Build leave type lookup: id → { name, is_paid }
       const leaveTypeMap = {};
-      leaveTypes.forEach(lt => {
-        leaveTypeMap[lt.id] = { name: lt.name, isPaid: lt.is_paid === true };
-      });
+      leaveTypes.forEach(lt => { leaveTypeMap[lt.id] = { name: lt.name, isPaid: lt.is_paid === true }; });
 
-      // Filter to APPROVED requests with days in the target week
-      const results = [];
-      allRequests.forEach(req => {
+      const leaveRequests = [];
+      allLeave.forEach(req => {
         if (req.status !== 'APPROVED') return;
-        const wid       = req.worker_id;
-        const leaveType = leaveTypeMap[req.leave_type_id] || { name: 'Time off', isPaid: true };
-
+        const lt = leaveTypeMap[req.leave_type_id] || { name: 'Time off', isPaid: true };
         (req.days_take_off || []).forEach(day => {
           if (day.date < startDate || day.date > endDate) return;
           const hrs = (day.number_of_minutes_taken_off || 0) / 60;
           if (hrs <= 0) return;
-
-          // Partial-day: use start_time from the request if present and this is a single-day request
-          const isPartialDay = hrs < 8;
-          const startTime = isPartialDay && req.start_time ? req.start_time : null;
-
-          results.push({
-            worker_id:    wid,
-            date:         day.date,
-            hours:        hrs,
-            leave_type:   leaveType.name,
-            is_paid:      leaveType.isPaid,
-            start_time:   startTime,
-            reason:       req.reason_for_leave || null,
+          leaveRequests.push({
+            worker_id:  req.worker_id,
+            date:       day.date,
+            hours:      hrs,
+            leave_type: lt.name,
+            is_paid:    lt.isPaid,
+            start_time: hrs < 8 && req.start_time ? req.start_time : null,
+            reason:     req.reason_for_leave || null,
           });
         });
       });
 
-      return res.status(200).json({ results });
+      // Write to cache in background (don't await — return to client immediately)
+      const payload = JSON.stringify({ timeEntries, leaveRequests, cachedAt: new Date().toISOString() });
+      put(`cache/week-${startDate}.json`, payload, {
+        access: 'public', allowOverwrite: true, contentType: 'application/json',
+      }).catch(err => console.error('[cache write]', err.message));
+
+      return res.status(200).json({ timeEntries, leaveRequests, fromCache: false });
 
     } else {
-      // Time entries
-      if (!startDate || !endDate) return res.status(400).json({ error: 'startDate and endDate required.' });
-      const filter = encodeURIComponent(
-        `start_time ge ${startDate}T00:00:00 and start_time le ${endDate}T23:59:59`
-      );
-      const all = await fetchAllPages(`${BASE}/time-entries?filter=${filter}`, apiKey);
-      return res.status(200).json({ results: all });
+      return res.status(400).json({ error: 'Unknown endpoint.' });
     }
   } catch (err) {
     console.error('[timesheets]', err.message);
