@@ -7,5 +7,13 @@
       "path": "/api/cron",
       "schedule": "*/5 * * * *"
     }
-  ]
+  ],
+  "functions": {
+    "api/cron.js": {
+      "maxDuration": 300
+    },
+    "api/timesheets.js": {
+      "maxDuration": 60
+    }
+  }
 }

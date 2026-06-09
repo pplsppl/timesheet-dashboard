@@ -17,7 +17,7 @@ const BASE        = 'https://rest.ripplingapis.com';
 const TARGET_DEPT = 'Care Coordinators';
 
 // How many weeks back to cache (current week + N prior)
-const WEEKS_BACK = 8;
+const WEEKS_BACK = 4;
 
 async function fetchAllPages(url, apiKey) {
   const results = [];
