@@ -3,11 +3,15 @@
  *
  * Validates session cookie, then proxies Rippling REST API.
  * Strictly filters to Care Coordinators sub-department only.
- * Fetches workers, managers, time entries, AND time off entries.
  *
  * Env vars required:
  *   RIPPLING_API_KEY   — Rippling REST API key
  *   SESSION_SECRET     — must match auth.js
+ *
+ * Endpoints (via ?endpoint=):
+ *   workers            → active Care Coordinator workers + their managers
+ *   timeoff            → approved leave requests filtered to date range, enriched with leave type
+ *   (default)          → time entries filtered by startDate/endDate
  */
 
 const crypto = require('crypto');
@@ -71,19 +75,13 @@ module.exports = async function handler(req, res) {
 
   try {
     if (endpoint === 'workers') {
-      // Fetch all active workers with user + department expanded
       const all = await fetchAllPages(`${BASE}/workers?expand=user,department`, apiKey);
 
-      // Filter to Care Coordinators only
       const careCoords = all.filter(w =>
         w.status === 'ACTIVE' && (w.department?.name || '') === TARGET_DEPT
       );
 
-      // Collect unique manager IDs from Care Coordinator workers
       const managerIds = [...new Set(careCoords.map(w => w.manager_id).filter(Boolean))];
-
-      // Fetch manager details (name) for each manager ID
-      // Managers may not be in Care Coordinators themselves, so fetch individually
       const managerMap = {};
       await Promise.all(managerIds.map(async (mid) => {
         try {
@@ -97,32 +95,51 @@ module.exports = async function handler(req, res) {
               || m.work_email || mid;
             managerMap[mid] = { id: mid, name };
           }
-        } catch { /* skip if individual fetch fails */ }
+        } catch { /* skip */ }
       }));
 
       return res.status(200).json({ results: careCoords, managers: managerMap });
 
     } else if (endpoint === 'timeoff') {
-      // Leave requests — paginate all, then filter to approved + days within the week
       if (!startDate || !endDate) return res.status(400).json({ error: 'startDate and endDate required.' });
 
-      const all = await fetchAllPages(`${BASE}/leave-requests`, apiKey);
+      // Fetch leave types and leave requests in parallel
+      const [leaveTypes, allRequests] = await Promise.all([
+        fetchAllPages(`${BASE}/leave-types`, apiKey),
+        fetchAllPages(`${BASE}/leave-requests`, apiKey),
+      ]);
 
-      // Only APPROVED requests, and only days_take_off entries within the requested week
+      // Build leave type lookup: id → { name, is_paid }
+      const leaveTypeMap = {};
+      leaveTypes.forEach(lt => {
+        leaveTypeMap[lt.id] = { name: lt.name, isPaid: lt.is_paid === true };
+      });
+
+      // Filter to APPROVED requests with days in the target week
       const results = [];
-      all.forEach(req => {
+      allRequests.forEach(req => {
         if (req.status !== 'APPROVED') return;
-        const wid = req.worker_id;
+        const wid       = req.worker_id;
+        const leaveType = leaveTypeMap[req.leave_type_id] || { name: 'Time off', isPaid: true };
+
         (req.days_take_off || []).forEach(day => {
-          if (day.date >= startDate && day.date <= endDate) {
-            results.push({
-              worker_id: wid,
-              date: day.date,
-              hours: (day.number_of_minutes_taken_off || 0) / 60,
-              leave_type_id: req.leave_type_id,
-              reason: req.reason_for_leave || null,
-            });
-          }
+          if (day.date < startDate || day.date > endDate) return;
+          const hrs = (day.number_of_minutes_taken_off || 0) / 60;
+          if (hrs <= 0) return;
+
+          // Partial-day: use start_time from the request if present and this is a single-day request
+          const isPartialDay = hrs < 8;
+          const startTime = isPartialDay && req.start_time ? req.start_time : null;
+
+          results.push({
+            worker_id:    wid,
+            date:         day.date,
+            hours:        hrs,
+            leave_type:   leaveType.name,
+            is_paid:      leaveType.isPaid,
+            start_time:   startTime,
+            reason:       req.reason_for_leave || null,
+          });
         });
       });
 

@@ -23,12 +23,17 @@
       --red:       #DC2626;
       --red-lt:    #FEE2E2;
       --red-tx:    #7F1D1D;
-      --amber-lt:  #FEF3C7;
-      --amber-tx:  #78350F;
+      --green:     #16A34A;
       --green-lt:  #DCFCE7;
       --green-tx:  #14532D;
+      --amber-lt:  #FEF3C7;
+      --amber-tx:  #78350F;
       --purple-lt: #EDE9FE;
       --purple-tx: #4C1D95;
+      --teal-lt:   #CCFBF1;
+      --teal-tx:   #134E4A;
+      --pink-lt:   #FCE7F3;
+      --pink-tx:   #831843;
       --warn-lt:   #FEF9C3;
       --warn-tx:   #713F12;
       --punch-bg:  #F9F8F5;
@@ -53,12 +58,17 @@
         --red:       #F87171;
         --red-lt:    #450A0A;
         --red-tx:    #FCA5A5;
-        --amber-lt:  #3B1F03;
-        --amber-tx:  #FCD34D;
+        --green:     #4ADE80;
         --green-lt:  #052E16;
         --green-tx:  #86EFAC;
+        --amber-lt:  #3B1F03;
+        --amber-tx:  #FCD34D;
         --purple-lt: #2E1065;
         --purple-tx: #C4B5FD;
+        --teal-lt:   #042F2E;
+        --teal-tx:   #99F6E4;
+        --pink-lt:   #500724;
+        --pink-tx:   #F9A8D4;
         --warn-lt:   #3B1F03;
         --warn-tx:   #FCD34D;
         --punch-bg:  #141316;
@@ -90,11 +100,10 @@
     .topbar-left { display: flex; align-items: center; gap: 10px; }
     .dept-chip { background: var(--accent-lt); color: var(--accent-tx); font-size: 11.5px; font-weight: 500; padding: 3px 9px; border-radius: var(--r); }
     .topbar-title { font-size: 14px; font-weight: 500; }
-    .topbar-right { display: flex; align-items: center; gap: 8px; }
-    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: #22C55E; animation: pulse 2.5s infinite; }
+    .topbar-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .live-dot { width: 6px; height: 6px; border-radius: 50%; background: #22C55E; animation: pulse 2.5s infinite; flex-shrink: 0; }
     @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.3} }
     .status-txt { font-size: 12px; color: var(--muted); }
-
     .week-nav { display: flex; align-items: center; gap: 4px; }
     .week-nav .wlabel { font-size: 12.5px; color: var(--muted); min-width: 148px; text-align: center; font-weight: 500; }
     .icon-btn { width: 30px; height: 30px; border: 0.5px solid var(--border-md); border-radius: var(--r); background: none; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 15px; cursor: pointer; }
@@ -105,26 +114,32 @@
     .text-btn i { font-size: 14px; }
 
     /* ── Metrics ── */
-    .metrics-wrap { padding: 18px 24px; border-bottom: 0.5px solid var(--border); background: var(--surface); }
-    .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
-    .metric { background: var(--bg); border-radius: var(--r); padding: 12px 14px; }
-    .metric-label { font-size: 11.5px; color: var(--muted); font-weight: 500; margin-bottom: 5px; }
-    .metric-val { font-size: 22px; font-weight: 500; line-height: 1; }
-    .metric-val.blue { color: var(--accent); }
+    .metrics-wrap { padding: 16px 24px; border-bottom: 0.5px solid var(--border); background: var(--surface); }
+    .metrics-section-label { font-size: 10.5px; font-weight: 600; color: var(--hint); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 8px; }
+    .metrics-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+    .metrics-row:last-child { margin-bottom: 0; }
+    .metric { background: var(--bg); border-radius: var(--r); padding: 11px 13px; min-width: 100px; flex: 1; }
+    .metric-label { font-size: 11px; color: var(--muted); font-weight: 500; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .metric-val { font-size: 20px; font-weight: 500; line-height: 1; }
+    .metric-val.blue   { color: var(--accent); }
+    .metric-val.green  { color: var(--green); }
+    .metric-val.amber  { color: #B45309; }
+    .metric-val.red    { color: var(--red); }
+    .metric-divider { width: 100%; height: 0.5px; background: var(--border); margin: 10px 0; }
 
     /* ── Flag banner ── */
     .flag-banner { margin: 16px 24px 0; background: var(--flag-bg); border: 1px solid var(--flag-bdr); border-radius: var(--r-lg); overflow: hidden; }
-    .flag-header { display: flex; align-items: center; gap: 8px; padding: 12px 16px; cursor: pointer; user-select: none; }
-    .flag-header i { font-size: 18px; color: var(--flag-tx); }
+    .flag-header { display: flex; align-items: center; gap: 8px; padding: 11px 16px; cursor: pointer; user-select: none; }
+    .flag-header i.ti-alert-triangle { font-size: 17px; color: var(--flag-tx); }
     .flag-title { font-size: 13px; font-weight: 600; color: var(--flag-tx); flex: 1; }
     .flag-chevron { font-size: 14px; color: var(--flag-tx); transition: transform 0.18s; }
     .flag-chevron.open { transform: rotate(90deg); }
     .flag-body { border-top: 1px solid var(--flag-bdr); }
-    .flag-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 16px; border-bottom: 0.5px solid var(--flag-bdr); font-size: 13px; }
+    .flag-row { display: flex; align-items: flex-start; gap: 10px; padding: 9px 16px; border-bottom: 0.5px solid var(--flag-bdr); font-size: 13px; }
     .flag-row:last-child { border-bottom: none; }
     .flag-row i { font-size: 15px; color: var(--flag-tx); flex-shrink: 0; margin-top: 1px; }
-    .flag-name { font-weight: 500; color: var(--text); }
-    .flag-detail { color: var(--muted); margin-top: 1px; font-size: 12px; }
+    .flag-name { font-weight: 500; }
+    .flag-detail { color: var(--muted); font-size: 12px; margin-top: 1px; }
 
     /* ── Content ── */
     .content { padding: 16px 24px 60px; }
@@ -134,7 +149,6 @@
     .search-input { width: 200px; padding: 7px 10px 7px 32px; border: 0.5px solid var(--border-md); border-radius: var(--r); background: var(--surface); color: var(--text); font-family: inherit; font-size: 13px; outline: none; }
     .search-input:focus { border-color: var(--accent); }
     .filter-select { padding: 7px 10px; border: 0.5px solid var(--border-md); border-radius: var(--r); background: var(--surface); color: var(--text); font-family: inherit; font-size: 13px; outline: none; }
-    .filter-select:focus { border-color: var(--accent); }
     .emp-count { font-size: 12px; color: var(--hint); margin-left: auto; }
 
     /* ── Table ── */
@@ -154,10 +168,11 @@
     .emp-name { font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .emp-title { font-size: 11.5px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 1px; }
 
-    /* ── 40hr bar with overflow ── */
+    /* ── 40hr bar: blue (worked) + green (leave) ── */
     .bar-outer { height: 4px; background: var(--border-md); border-radius: 2px; margin-top: 5px; overflow: hidden; position: relative; }
-    .bar-blue { height: 100%; border-radius: 2px; background: var(--accent); position: absolute; left: 0; top: 0; }
-    .bar-red  { height: 100%; border-radius: 0 2px 2px 0; background: var(--red); position: absolute; top: 0; }
+    .bar-blue  { height: 100%; background: var(--accent); position: absolute; left: 0; top: 0; border-radius: 2px 0 0 2px; }
+    .bar-green { height: 100%; background: var(--green); position: absolute; top: 0; }
+    .bar-red   { height: 100%; background: var(--red); position: absolute; top: 0; border-radius: 0 2px 2px 0; }
 
     .chevron { color: var(--hint); font-size: 14px; display: inline-block; transition: transform 0.18s; }
     .chevron.open { transform: rotate(90deg); }
@@ -167,25 +182,26 @@
 
     /* ── Badges ── */
     .badge { display: inline-flex; align-items: center; padding: 2px 7px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap; }
-    .b-reg  { background: var(--accent-lt);  color: var(--accent-tx); }
-    .b-ot   { background: var(--amber-lt);   color: var(--amber-tx); }
-    .b-pto  { background: var(--green-lt);   color: var(--green-tx); }
-    .b-sick { background: var(--red-lt);     color: var(--red-tx); }
-    .b-hol  { background: var(--purple-lt);  color: var(--purple-tx); }
-    .b-toff { background: var(--green-lt);   color: var(--green-tx); }
-    .b-oth  { background: var(--bg); color: var(--muted); border: 0.5px solid var(--border-md); }
+    .b-reg    { background: var(--accent-lt);  color: var(--accent-tx); }
+    .b-ot     { background: var(--amber-lt);   color: var(--amber-tx); }
+    .b-pto    { background: var(--green-lt);   color: var(--green-tx); }
+    .b-sick   { background: var(--teal-lt);    color: var(--teal-tx); }
+    .b-brvmt  { background: var(--purple-lt);  color: var(--purple-tx); }
+    .b-makeup { background: var(--pink-lt);    color: var(--pink-tx); }
+    .b-unpaid { background: var(--bg);         color: var(--muted); border: 0.5px solid var(--border-md); }
+    .b-leave  { background: var(--green-lt);   color: var(--green-tx); }
 
     /* ── Punch section ── */
     tr.punch-section td { padding: 0; border-bottom: 0.5px solid var(--border); }
     .punch-inner { background: var(--punch-bg); }
     .punch-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
-    .punch-table thead th { padding: 6px 12px; font-size: 11px; font-weight: 500; color: var(--hint); background: var(--punch-bg); border-bottom: 0.5px solid var(--border); }
+    .punch-table thead th { padding: 6px 12px; font-size: 11px; font-weight: 500; color: var(--hint); background: var(--punch-bg); border-bottom: 0.5px solid var(--border); text-align: left; }
     .punch-table thead th.r { text-align: right; }
     .punch-table tbody td { padding: 8px 12px; font-size: 12.5px; border-bottom: 0.5px solid var(--border); background: var(--punch-bg); vertical-align: top; }
     .punch-table tbody tr:last-child td { border-bottom: none; }
     .punch-table tbody tr.punch-flagged td { background: #FFFBEB; }
+    .punch-table tbody tr.punch-leave td { background: #F0FDF4; }
     .punch-time { font-family: 'DM Mono', monospace; font-size: 12px; }
-    .flag-icon { color: #D97706; font-size: 14px; }
     .comment-tag { display: inline-flex; align-items: flex-start; gap: 5px; background: var(--warn-lt); color: var(--warn-tx); font-size: 11.5px; padding: 4px 8px; border-radius: var(--r); margin-top: 4px; line-height: 1.4; }
     .comment-tag i { font-size: 13px; flex-shrink: 0; margin-top: 1px; }
 
@@ -196,6 +212,11 @@
     .state-view.err i { opacity: 0.6; }
     .spinner { width: 20px; height: 20px; border: 2px solid var(--border-md); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Legend ── */
+    .bar-legend { display: flex; align-items: center; gap: 12px; margin-top: 8px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+    .legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
   </style>
 </head>
 <body>
@@ -216,7 +237,6 @@
 
 <!-- DASHBOARD -->
 <div id="dashboard">
-
   <div class="topbar">
     <div class="topbar-left">
       <span class="dept-chip">Care Coordinators</span>
@@ -237,10 +257,19 @@
   </div>
 
   <div class="metrics-wrap">
-    <div class="metrics-grid" id="metricsGrid"></div>
+    <div class="metrics-section-label">Worked hours</div>
+    <div class="metrics-row" id="workedMetrics"></div>
+    <div class="metric-divider"></div>
+    <div class="metrics-section-label">Leave</div>
+    <div class="metrics-row" id="leaveMetrics"></div>
+    <div class="metric-divider"></div>
+    <div class="bar-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Worked hours (40hr target)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Leave (not counted toward OT)</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>Overtime (over 40h worked)</div>
+    </div>
   </div>
 
-  <!-- Flag banner -->
   <div id="flagBanner" style="display:none">
     <div class="flag-banner">
       <div class="flag-header" onclick="toggleFlagBanner()">
@@ -270,20 +299,38 @@
 </div>
 
 <script>
-/* ═══════════════════════════════════════
+/* ═══════════════════════════════════
+   Leave type → badge class + display name
+═══════════════════════════════════ */
+const LEAVE_BADGE = {
+  'Paid Time Off - Ops':        { cls: 'b-pto',    label: 'PTO' },
+  'Part-Time Time Off - Ops':   { cls: 'b-unpaid', label: 'Part-Time Off' },
+  'Statutory Paid Sick Leave':  { cls: 'b-sick',   label: 'Sick Leave' },
+  'Bereavement':                { cls: 'b-brvmt',  label: 'Bereavement' },
+  'Make-Up Time Request':       { cls: 'b-makeup', label: 'Make-Up Time' },
+  'Make-Up Time':               { cls: 'b-makeup', label: 'Make-Up Time' },
+  'Vacation':                   { cls: 'b-pto',    label: 'PTO' },
+  'Sick Leave':                 { cls: 'b-sick',   label: 'Sick Leave' },
+};
+
+function leaveBadge(typeName) {
+  return LEAVE_BADGE[typeName] || { cls: 'b-leave', label: typeName || 'Leave' };
+}
+
+/* ═══════════════════════════════════
    State
-═══════════════════════════════════════ */
-let workers     = {};   // id → { name, title, managerId }
-let managers    = {};   // id → { name }
+═══════════════════════════════════ */
+let workers     = {};
+let managers    = {};
 let timeEntries = [];
 let timeOff     = [];
 let weekOffset  = 0;
 let expandedId  = null;
 let flagOpen    = true;
 
-/* ═══════════════════════════════════════
+/* ═══════════════════════════════════
    Boot
-═══════════════════════════════════════ */
+═══════════════════════════════════ */
 (async function boot() {
   try {
     const r = await fetch('/api/auth');
@@ -303,9 +350,9 @@ function showDashboard() {
   loadAll();
 }
 
-/* ═══════════════════════════════════════
+/* ═══════════════════════════════════
    Login
-═══════════════════════════════════════ */
+═══════════════════════════════════ */
 document.getElementById('pwInput').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
 
 async function doLogin() {
@@ -322,9 +369,9 @@ async function doLogin() {
   finally { btn.disabled = false; btn.textContent = 'Sign in'; }
 }
 
-/* ═══════════════════════════════════════
+/* ═══════════════════════════════════
    Data
-═══════════════════════════════════════ */
+═══════════════════════════════════ */
 async function loadAll() {
   setLoading();
   try {
@@ -347,7 +394,8 @@ async function loadAll() {
 
     populateManagerFilter();
     renderAll();
-    document.getElementById('statusLine').textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('statusLine').textContent =
+      'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   } catch (e) {
     if (e.message === '401') { showLogin(); return; }
     showError(e.message);
@@ -362,7 +410,6 @@ async function fetchTimeOff() {
   const { start, end } = weekBounds();
   return apiFetch(`/api/timesheets?endpoint=timeoff&startDate=${toDateStr(start)}&endDate=${toDateStr(end)}`);
 }
-
 async function apiFetch(url) {
   const r = await fetch(url);
   if (!r.ok) {
@@ -381,16 +428,17 @@ async function refreshData() {
     timeEntries = tRes.results || [];
     timeOff     = toRes.results || [];
     renderAll();
-    document.getElementById('statusLine').textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    document.getElementById('statusLine').textContent =
+      'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   } catch (e) {
     if (e.message === '401') { showLogin(); return; }
     document.getElementById('statusLine').textContent = 'Refresh failed';
   }
 }
 
-/* ═══════════════════════════════════════
-   Week helpers (Sun–Sat)
-═══════════════════════════════════════ */
+/* ═══════════════════════════════════
+   Week (Sun–Sat)
+═══════════════════════════════════ */
 function weekBounds(offset = weekOffset) {
   const now = new Date();
   const sun = new Date(now);
@@ -403,7 +451,7 @@ function weekBounds(offset = weekOffset) {
 }
 function toDateStr(d) { return d.toISOString().split('T')[0]; }
 function fmtDate(d)   { return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); }
-function fmtTime(iso) { return iso ? new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '—'; }
+function fmtTime(iso) { return iso ? new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : null; }
 function hrsFromSeg(s) { return s.start_time && s.end_time ? (new Date(s.end_time) - new Date(s.start_time)) / 3_600_000 : 0; }
 
 function updateWeekLabel() {
@@ -415,9 +463,9 @@ function updateWeekLabel() {
 function shiftWeek(d) { weekOffset += d; updateWeekLabel(); loadAll(); }
 function goCurrentWeek() { weekOffset = 0; updateWeekLabel(); loadAll(); }
 
-/* ═══════════════════════════════════════
+/* ═══════════════════════════════════
    Manager filter
-═══════════════════════════════════════ */
+═══════════════════════════════════ */
 function populateManagerFilter() {
   const sel = document.getElementById('managerFilter');
   const cur = sel.value;
@@ -428,55 +476,57 @@ function populateManagerFilter() {
   sel.innerHTML = '<option value="">All managers</option>' + opts;
 }
 
-/* ═══════════════════════════════════════
-   Segment category
-═══════════════════════════════════════ */
+/* ═══════════════════════════════════
+   Segment category (for worked time)
+═══════════════════════════════════ */
 function segCat(name) {
   const n = (name || '').toLowerCase();
   if (n.includes('regular'))                               return 'regular';
-  if (n.includes('overtime') || n.includes('over time'))  return 'ot';
+  if (n.includes('overtime') || n.includes('over time'))   return 'ot';
   if (n.includes('double'))                                return 'ot';
-  if (n.includes('pto') || n.includes('vacation'))         return 'pto';
-  if (n.includes('sick'))                                  return 'sick';
-  if (n.includes('holiday'))                               return 'holiday';
-  if (n.includes('time off') || n.includes('timeoff'))     return 'timeoff';
-  return 'other';
+  return 'regular';
 }
 
 function emptyBucket() {
-  return { regular: 0, ot: 0, pto: 0, sick: 0, holiday: 0, timeoff: 0, other: 0, total: 0, entries: [], flags: [] };
+  return {
+    // worked
+    regular: 0, ot: 0,
+    workedTotal: 0,
+    // leave (never counts toward OT)
+    pto: 0, sick: 0, bereavement: 0, makeup: 0, parttime: 0, otherLeave: 0,
+    leaveTotal: 0,
+    entries: [],
+    flags: [],
+  };
 }
 
-/* ═══════════════════════════════════════
-   Process entries + time off
-═══════════════════════════════════════ */
+/* ═══════════════════════════════════
+   Process entries
+═══════════════════════════════════ */
 function processAll() {
   const totals = emptyBucket();
   const byEmp  = {};
-
-  // Ensure all known workers have a bucket
   Object.keys(workers).forEach(id => { byEmp[id] = emptyBucket(); });
 
-  // Time entries
+  // ── Time entries (worked hours) ──
   timeEntries.forEach(entry => {
     const wid  = entry.worker_id || entry.worker || 'unknown';
     if (!byEmp[wid]) byEmp[wid] = emptyBucket();
 
-    const segs    = (entry.segments || []).filter(s => !s.break_type_id);
-    const breaks  = (entry.segments || []).filter(s =>  s.break_type_id);
+    const segs   = (entry.segments || []).filter(s => !s.break_type_id);
+    const breaks = (entry.segments || []).filter(s =>  s.break_type_id);
     const breakHrs = breaks.reduce((a, s) => a + hrsFromSeg(s), 0);
     const entryHrs = segs.reduce((a, s) => a + hrsFromSeg(s), 0);
 
-    // Accumulate by category
     if (segs.length) {
       segs.forEach(seg => {
         const hrs = hrsFromSeg(seg);
         if (hrs <= 0) return;
         const cat = segCat(seg.display_name);
-        byEmp[wid][cat] = (byEmp[wid][cat] || 0) + hrs;
-        byEmp[wid].total += hrs;
-        totals[cat] = (totals[cat] || 0) + hrs;
-        totals.total += hrs;
+        byEmp[wid][cat]         += hrs;
+        byEmp[wid].workedTotal  += hrs;
+        totals[cat]             += hrs;
+        totals.workedTotal      += hrs;
       });
     } else {
       const s   = entry.time_entry_summary || {};
@@ -484,68 +534,83 @@ function processAll() {
       const ot  = (s.over_time_hours || 0) + (s.double_over_time_hours || 0);
       [['regular', reg], ['ot', ot]].forEach(([cat, hrs]) => {
         if (!hrs) return;
-        byEmp[wid][cat] += hrs; byEmp[wid].total += hrs;
-        totals[cat] += hrs; totals.total += hrs;
+        byEmp[wid][cat]        += hrs;
+        byEmp[wid].workedTotal += hrs;
+        totals[cat]            += hrs;
+        totals.workedTotal     += hrs;
       });
     }
 
-    // Flag if any day > 10.5 hours
     const flagged = entryHrs > 10.5;
-    if (flagged) byEmp[wid].flags.push({ type: 'over8', date: entry.start_time, hrs: entryHrs });
+    if (flagged) byEmp[wid].flags.push({ date: entry.start_time, hrs: entryHrs });
 
     byEmp[wid].entries.push({
-      id: entry.id,
-      date: entry.start_time ? new Date(entry.start_time) : null,
-      clockIn:  entry.start_time,
-      clockOut: entry.end_time,
+      id:        entry.id,
+      date:      entry.start_time ? new Date(entry.start_time) : null,
+      clockIn:   entry.start_time,
+      clockOut:  entry.end_time,
       breakHrs,
-      hrs: entryHrs,
+      hrs:       entryHrs,
       flagged,
-      segments: segs,
-      comments: (entry.comments || []).map(c => c.text).filter(Boolean),
-      isTimeOff: false,
+      segments:  segs,
+      comments:  (entry.comments || []).map(c => c.text).filter(Boolean),
+      isLeave:   false,
     });
   });
 
-  // Time off entries — already flattened to one record per day by the server
+  // ── Leave requests ──
   timeOff.forEach(to => {
     const wid = to.worker_id || 'unknown';
     if (!byEmp[wid]) byEmp[wid] = emptyBucket();
-
     const hrs = to.hours || 0;
     if (hrs <= 0) return;
 
-    // All leave requests are treated as PTO (approved time off)
-    byEmp[wid].pto += hrs;
-    byEmp[wid].total += hrs;
-    totals.pto += hrs;
-    totals.total += hrs;
+    const typeName = to.leave_type || 'Leave';
+
+    // Map to bucket key
+    let leaveKey = 'otherLeave';
+    if (typeName.includes('Paid Time Off'))              leaveKey = 'pto';
+    else if (typeName.includes('Sick'))                  leaveKey = 'sick';
+    else if (typeName.includes('Bereavement'))           leaveKey = 'bereavement';
+    else if (typeName.includes('Make-Up'))               leaveKey = 'makeup';
+    else if (typeName.includes('Part-Time'))             leaveKey = 'parttime';
+    else if (typeName.includes('Vacation'))              leaveKey = 'pto';
+
+    byEmp[wid][leaveKey]    += hrs;
+    byEmp[wid].leaveTotal   += hrs;
+    totals[leaveKey]        += hrs;
+    totals.leaveTotal       += hrs;
+
+    // Partial day: format start time if provided
+    const startTimeStr = to.start_time ? fmtTime(to.start_time) : null;
 
     byEmp[wid].entries.push({
-      id: to.date + '-' + wid,
-      date: to.date ? new Date(to.date + 'T12:00:00') : null,
-      clockIn:  null,
-      clockOut: null,
-      breakHrs: 0,
+      id:          to.date + '-' + wid + '-' + leaveKey,
+      date:        to.date ? new Date(to.date + 'T12:00:00') : null,
+      clockIn:     null,
+      clockOut:    null,
+      breakHrs:    0,
       hrs,
-      flagged: false,
-      segments: [],
-      comments: to.reason ? [to.reason] : [],
-      isTimeOff: true,
-      timeOffName: 'Time off',
-      isPaid: true,
+      flagged:     false,
+      segments:    [],
+      comments:    to.reason ? [to.reason] : [],
+      isLeave:     true,
+      leaveType:   typeName,
+      isPaid:      to.is_paid,
+      startTimeStr,
+      isPartial:   hrs < 8,
     });
   });
 
-  // Sort each employee's entries by date
+  // Sort entries by date per employee
   Object.values(byEmp).forEach(b => b.entries.sort((a, b) => (a.date || 0) - (b.date || 0)));
 
   return { totals, byEmp };
 }
 
-/* ═══════════════════════════════════════
-   Render
-═══════════════════════════════════════ */
+/* ═══════════════════════════════════
+   Render all
+═══════════════════════════════════ */
 function renderAll() {
   const { totals, byEmp } = processAll();
   renderMetrics(totals);
@@ -555,13 +620,17 @@ function renderAll() {
 
 /* ── Metrics ── */
 function renderMetrics(t) {
-  document.getElementById('metricsGrid').innerHTML = `
-    <div class="metric"><div class="metric-label">Total hours</div><div class="metric-val blue">${t.total.toFixed(1)}</div></div>
+  document.getElementById('workedMetrics').innerHTML = `
+    <div class="metric"><div class="metric-label">Total worked</div><div class="metric-val blue">${t.workedTotal.toFixed(1)}</div></div>
     <div class="metric"><div class="metric-label">Regular</div><div class="metric-val">${t.regular.toFixed(1)}</div></div>
-    <div class="metric"><div class="metric-label">Overtime</div><div class="metric-val">${t.ot.toFixed(1)}</div></div>
-    <div class="metric"><div class="metric-label">PTO (paid)</div><div class="metric-val">${t.pto.toFixed(1)}</div></div>
-    <div class="metric"><div class="metric-label">Time off (unpaid)</div><div class="metric-val">${t.timeoff.toFixed(1)}</div></div>
+    <div class="metric"><div class="metric-label">Overtime</div><div class="metric-val ${t.ot > 0 ? 'amber' : ''}">${t.ot.toFixed(1)}</div></div>
+  `;
+  document.getElementById('leaveMetrics').innerHTML = `
+    <div class="metric"><div class="metric-label">PTO</div><div class="metric-val green">${t.pto.toFixed(1)}</div></div>
     <div class="metric"><div class="metric-label">Sick leave</div><div class="metric-val">${t.sick.toFixed(1)}</div></div>
+    <div class="metric"><div class="metric-label">Bereavement</div><div class="metric-val">${t.bereavement.toFixed(1)}</div></div>
+    <div class="metric"><div class="metric-label">Make-Up Time</div><div class="metric-val">${t.makeup.toFixed(1)}</div></div>
+    <div class="metric"><div class="metric-label">Part-Time Off</div><div class="metric-val">${t.parttime.toFixed(1)}</div></div>
   `;
 }
 
@@ -572,21 +641,19 @@ function renderFlagBanner(byEmp) {
     d.flags.forEach(f => {
       const w = workers[wid] || { name: wid };
       const dateStr = f.date ? new Date(f.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) : '—';
-      flags.push({ wid, name: w.name, date: dateStr, hrs: f.hrs });
+      flags.push({ name: w.name, date: dateStr, hrs: f.hrs });
     });
   });
-
   const banner = document.getElementById('flagBanner');
   if (!flags.length) { banner.style.display = 'none'; return; }
-
   banner.style.display = 'block';
-  document.getElementById('flagTitle').textContent = `${flags.length} entr${flags.length === 1 ? 'y' : 'ies'} over 10.5 hours — review required`;
+  document.getElementById('flagTitle').textContent = `${flags.length} shift${flags.length === 1 ? '' : 's'} over 10.5 hours — review required`;
   document.getElementById('flagBody').innerHTML = flags.map(f => `
     <div class="flag-row">
       <i class="ti ti-clock-exclamation"></i>
       <div>
         <div class="flag-name">${esc(f.name)}</div>
-        <div class="flag-detail">${f.date} · ${f.hrs.toFixed(1)} hours logged</div>
+        <div class="flag-detail">${f.date} · ${f.hrs.toFixed(1)}h logged</div>
       </div>
     </div>`).join('');
 }
@@ -609,8 +676,7 @@ function renderTable(byEmpArg) {
     return true;
   });
 
-  // Sort by total hours desc
-  empIds.sort((a, b) => (byEmp[b]?.total || 0) - (byEmp[a]?.total || 0));
+  empIds.sort((a, b) => (byEmp[b]?.workedTotal || 0) - (byEmp[a]?.workedTotal || 0));
   document.getElementById('empCount').textContent = empIds.length + ' employees';
 
   if (!empIds.length) {
@@ -618,47 +684,45 @@ function renderTable(byEmpArg) {
     return;
   }
 
+  const maxWorked = empIds.reduce((m, id) => Math.max(m, byEmp[id]?.workedTotal || 0), 0) || 40;
+
   const rows = empIds.map(id => {
     const w      = workers[id];
     const d      = byEmp[id] || emptyBucket();
-    const total  = d.total;
-    const hasFla = d.flags.length > 0;
+    const worked = d.workedTotal;
+    const leave  = d.leaveTotal;
     const isOpen = expandedId === id;
+    const hasFla = d.flags.length > 0;
 
-    // 40hr bar
-    const blueW = Math.min(total, 40) / 40 * 100;
-    const redW  = total > 40 ? ((total - 40) / 40 * 100) : 0;
-    const blueStyle = `width:${blueW}%`;
-    const redLeft   = `left:${Math.min(blueW, 100)}%`;
-    const redStyle  = redW > 0 ? `width:${Math.min(redW, 100)}%;${redLeft}` : '';
+    // Bar: blue = worked (capped at 40), green = leave, red = overtime beyond 40
+    const blueW  = Math.min(worked, 40) / 40 * 100;
+    const overW  = worked > 40 ? (worked - 40) / 40 * 100 : 0;
+    const greenW = Math.min(leave / 40 * 100, 100 - Math.min(blueW + overW, 100));
+    const greenLeft = Math.min(blueW + overW, 100);
 
-    const overBadge = total > 40
-      ? `<span class="over-badge"><i class="ti ti-alert-triangle" style="font-size:10px"></i> +${(total-40).toFixed(1)}h</span>`
+    const overBadge = worked > 40
+      ? `<span class="over-badge"><i class="ti ti-alert-triangle" style="font-size:10px"></i> +${(worked-40).toFixed(1)}h</span>`
       : '';
 
-    const empRow = `<tr class="emp-row${isOpen ? ' open' : ''}${hasFla ? ' flagged' : ''}" onclick="toggleExpand('${id}')">
-      <td style="width:28px;padding-left:14px"><i class="ti ti-chevron-right chevron${isOpen ? ' open' : ''}"></i></td>
+    return `<tr class="emp-row${isOpen?' open':''}${hasFla?' flagged':''}" onclick="toggleExpand('${id}')">
+      <td style="width:28px;padding-left:14px"><i class="ti ti-chevron-right chevron${isOpen?' open':''}"></i></td>
       <td style="width:200px">
-        <div class="emp-name">${esc(w.name)}${hasFla ? ' <i class="ti ti-alert-triangle" style="font-size:12px;color:#D97706;margin-left:3px"></i>' : ''}</div>
+        <div class="emp-name">${esc(w.name)}${hasFla?' <i class="ti ti-alert-triangle" style="font-size:12px;color:#D97706;margin-left:3px"></i>':''}</div>
         <div class="emp-title">${esc(w.title)}</div>
         <div class="bar-outer">
-          <div class="bar-blue" style="${blueStyle}"></div>
-          ${redStyle ? `<div class="bar-red" style="${redStyle}"></div>` : ''}
+          <div class="bar-blue"  style="width:${blueW.toFixed(1)}%"></div>
+          ${overW  > 0 ? `<div class="bar-red"   style="left:${Math.min(blueW,100).toFixed(1)}%;width:${overW.toFixed(1)}%"></div>` : ''}
+          ${greenW > 0 ? `<div class="bar-green" style="left:${greenLeft.toFixed(1)}%;width:${greenW.toFixed(1)}%"></div>` : ''}
         </div>
       </td>
-      <td style="width:130px;font-size:12px;color:var(--muted)">${esc(managers[w.managerId]?.name || '—')}</td>
-      <td class="r num" style="width:70px">${d.regular > 0.01 ? d.regular.toFixed(1) : '<span class="dim">—</span>'}</td>
+      <td style="width:130px;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(managers[w.managerId]?.name || '—')}</td>
+      <td class="r num" style="width:65px">${worked > 0.01 ? worked.toFixed(1)+overBadge : '<span class="dim">—</span>'}</td>
       <td class="r num" style="width:55px">${d.ot > 0.01 ? d.ot.toFixed(1) : '<span class="dim">—</span>'}</td>
       <td class="r num" style="width:55px">${d.pto > 0.01 ? d.pto.toFixed(1) : '<span class="dim">—</span>'}</td>
-      <td class="r num" style="width:65px">${d.timeoff > 0.01 ? d.timeoff.toFixed(1) : '<span class="dim">—</span>'}</td>
-      <td class="r num" style="width:70px;font-weight:500">${total > 0 ? total.toFixed(1) + overBadge : '<span class="dim" style="font-weight:400">0.0</span>'}</td>
-    </tr>`;
-
-    let punchRows = '';
-    if (isOpen) {
-      punchRows = `<tr class="punch-section"><td colspan="8"><div class="punch-inner">${buildPunchTable(d.entries)}</div></td></tr>`;
-    }
-    return empRow + punchRows;
+      <td class="r num" style="width:55px">${d.sick > 0.01 ? d.sick.toFixed(1) : '<span class="dim">—</span>'}</td>
+      <td class="r num" style="width:55px">${(d.bereavement+d.makeup+d.parttime+d.otherLeave) > 0.01 ? (d.bereavement+d.makeup+d.parttime+d.otherLeave).toFixed(1) : '<span class="dim">—</span>'}</td>
+    </tr>
+    ${isOpen ? `<tr class="punch-section"><td colspan="8"><div class="punch-inner">${buildPunchTable(d.entries)}</div></td></tr>` : ''}`;
   }).join('');
 
   document.getElementById('tableWrap').innerHTML = `
@@ -667,11 +731,11 @@ function renderTable(byEmpArg) {
         <th style="width:28px"></th>
         <th style="width:200px">Employee</th>
         <th style="width:130px">Manager</th>
-        <th class="r" style="width:70px">Regular</th>
+        <th class="r" style="width:65px">Worked</th>
         <th class="r" style="width:55px">OT</th>
         <th class="r" style="width:55px">PTO</th>
-        <th class="r" style="width:65px">Time off</th>
-        <th class="r" style="width:70px">Total</th>
+        <th class="r" style="width:55px">Sick</th>
+        <th class="r" style="width:55px">Other leave</th>
       </tr></thead>
       <tbody>${rows}</tbody>
     </table>`;
@@ -687,41 +751,46 @@ function buildPunchTable(entries) {
     const dayLabel = e.date
       ? e.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
       : '—';
-    const breakStr = e.breakHrs > 0
-      ? `<span class="punch-time" style="color:var(--muted)">−${Math.round(e.breakHrs * 60)}m</span>`
-      : '<span class="dim">—</span>';
 
-    let typeBadge, typeLabel;
-    if (e.isTimeOff) {
-      typeBadge = e.isPaid ? 'b-pto' : 'b-toff';
-      typeLabel = e.timeOffName;
-    } else {
-      const cats = {};
-      e.segments.forEach(s => { const c = segCat(s.display_name); cats[c] = (cats[c]||0) + hrsFromSeg(s); });
-      const dom = Object.entries(cats).sort((a,b)=>b[1]-a[1])[0]?.[0] || 'other';
-      const cls = { regular:'b-reg', ot:'b-ot', pto:'b-pto', sick:'b-sick', holiday:'b-hol', timeoff:'b-toff', other:'b-oth' };
-      const lbl = { regular:'Regular', ot:'Overtime', pto:'PTO', sick:'Sick', holiday:'Holiday', timeoff:'Time off', other:'Other' };
-      typeBadge = cls[dom] || 'b-oth';
-      typeLabel = lbl[dom] || dom;
+    if (e.isLeave) {
+      const lb = leaveBadge(e.leaveType);
+      const timeStr = e.isPartial && e.startTimeStr
+        ? `<span class="punch-time">${e.startTimeStr}</span> · ${e.hrs.toFixed(1)}h`
+        : `${e.hrs.toFixed(1)}h`;
+      const commentHtml = e.comments.filter(Boolean).map(c =>
+        `<div class="comment-tag"><i class="ti ti-message-circle"></i><span>${esc(c)}</span></div>`
+      ).join('');
+      return `<tr class="punch-leave">
+        <td style="width:140px"><div style="font-size:12px;font-weight:500">${dayLabel}</div>${commentHtml}</td>
+        <td colspan="3" style="font-size:12px;color:var(--muted)">${timeStr}</td>
+        <td style="width:100px"><span class="badge ${lb.cls}">${esc(lb.label)}</span>${e.isPaid ? '' : ' <span style="font-size:10.5px;color:var(--hint)">(unpaid)</span>'}</td>
+        <td class="r" style="width:60px"><span class="num" style="font-weight:500;color:var(--green)">${e.hrs.toFixed(1)}</span></td>
+      </tr>`;
     }
 
+    const breakStr = e.breakHrs > 0
+      ? `<span class="punch-time" style="color:var(--muted)">−${Math.round(e.breakHrs*60)}m</span>`
+      : '<span class="dim">—</span>';
+
+    const cats = {};
+    e.segments.forEach(s => { const c = segCat(s.display_name); cats[c] = (cats[c]||0) + hrsFromSeg(s); });
+    const dom = Object.entries(cats).sort((a,b)=>b[1]-a[1])[0]?.[0] || 'regular';
+    const badgeCls = dom === 'ot' ? 'b-ot' : 'b-reg';
+    const badgeLbl = dom === 'ot' ? 'Overtime' : 'Regular';
+
+    const flagHtml = e.flagged
+      ? `<div style="display:inline-flex;align-items:center;gap:4px;margin-top:3px;font-size:11.5px;color:#D97706"><i class="ti ti-alert-triangle"></i> ${e.hrs.toFixed(1)}h</div>`
+      : '';
     const commentHtml = e.comments.map(c =>
       `<div class="comment-tag"><i class="ti ti-message-circle"></i><span>${esc(c)}</span></div>`
     ).join('');
 
-    const flagHtml = e.flagged
-      ? `<div style="display:inline-flex;align-items:center;gap:4px;margin-top:3px;font-size:11.5px;color:#D97706"><i class="ti ti-alert-triangle flag-icon"></i> ${e.hrs.toFixed(1)}h logged</div>`
-      : '';
-
     return `<tr class="${e.flagged ? 'punch-flagged' : ''}">
-      <td style="width:140px">
-        <div style="font-size:12px;font-weight:500">${dayLabel}</div>
-        ${flagHtml}${commentHtml}
-      </td>
-      <td style="width:95px"><span class="punch-time">${e.isTimeOff ? '<span class="dim">—</span>' : fmtTime(e.clockIn)}</span></td>
-      <td style="width:95px"><span class="punch-time">${e.isTimeOff ? '<span class="dim">—</span>' : fmtTime(e.clockOut)}</span></td>
-      <td style="width:65px">${e.isTimeOff ? '<span class="dim">—</span>' : breakStr}</td>
-      <td style="width:100px"><span class="badge ${typeBadge}">${esc(typeLabel)}</span></td>
+      <td style="width:140px"><div style="font-size:12px;font-weight:500">${dayLabel}</div>${flagHtml}${commentHtml}</td>
+      <td style="width:95px"><span class="punch-time">${fmtTime(e.clockIn) || '—'}</span></td>
+      <td style="width:95px"><span class="punch-time">${fmtTime(e.clockOut) || '—'}</span></td>
+      <td style="width:65px">${breakStr}</td>
+      <td style="width:100px"><span class="badge ${badgeCls}">${badgeLbl}</span></td>
       <td class="r" style="width:60px"><span class="num" style="font-weight:500">${e.hrs.toFixed(1)}</span></td>
     </tr>`;
   }).join('');
@@ -744,24 +813,25 @@ function toggleExpand(id) {
   renderTable();
 }
 
-/* ═══════════════════════════════════════
+/* ═══════════════════════════════════
    Export
-═══════════════════════════════════════ */
+═══════════════════════════════════ */
 function exportCSV() {
   const { start, end } = weekBounds();
   const { byEmp } = processAll();
-  const rows = [['Week', 'Employee', 'Title', 'Manager', 'Regular', 'Overtime', 'PTO', 'Time Off (Unpaid)', 'Sick', 'Holiday', 'Total']];
+  const rows = [['Week','Employee','Title','Manager','Worked','Regular','Overtime','PTO','Sick Leave','Bereavement','Make-Up Time','Part-Time Off','Leave Total']];
   const weekStr = `${toDateStr(start)} to ${toDateStr(end)}`;
 
   Object.keys(workers)
-    .sort((a, b) => (byEmp[b]?.total || 0) - (byEmp[a]?.total || 0))
+    .sort((a, b) => (byEmp[b]?.workedTotal || 0) - (byEmp[a]?.workedTotal || 0))
     .forEach(id => {
       const w = workers[id];
       const d = byEmp[id] || emptyBucket();
       const mgr = managers[w.managerId]?.name || '';
       rows.push([weekStr, w.name, w.title, mgr,
-        d.regular.toFixed(2), d.ot.toFixed(2), d.pto.toFixed(2),
-        d.timeoff.toFixed(2), d.sick.toFixed(2), d.holiday.toFixed(2), d.total.toFixed(2)]);
+        d.workedTotal.toFixed(2), d.regular.toFixed(2), d.ot.toFixed(2),
+        d.pto.toFixed(2), d.sick.toFixed(2), d.bereavement.toFixed(2),
+        d.makeup.toFixed(2), d.parttime.toFixed(2), d.leaveTotal.toFixed(2)]);
     });
 
   const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n');
@@ -771,12 +841,13 @@ function exportCSV() {
   a.click();
 }
 
-/* ═══════════════════════════════════════
-   UI helpers
-═══════════════════════════════════════ */
+/* ═══════════════════════════════════
+   Helpers
+═══════════════════════════════════ */
 function setLoading() {
   document.getElementById('tableWrap').innerHTML = `<div class="state-view"><div class="spinner"></div><span>Loading…</span></div>`;
-  document.getElementById('metricsGrid').innerHTML = '';
+  document.getElementById('workedMetrics').innerHTML = '';
+  document.getElementById('leaveMetrics').innerHTML = '';
   document.getElementById('flagBanner').style.display = 'none';
 }
 function showError(msg) {
@@ -784,7 +855,7 @@ function showError(msg) {
   document.getElementById('statusLine').textContent = 'Error';
 }
 function stateHTML(icon, msg, err) {
-  return `<div class="state-view${err ? ' err' : ''}"><i class="ti ${icon}"></i><span>${msg}</span></div>`;
+  return `<div class="state-view${err?' err':''}"><i class="ti ${icon}"></i><span>${msg}</span></div>`;
 }
 function esc(s) {
   return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
