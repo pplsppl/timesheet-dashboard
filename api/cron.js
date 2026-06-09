@@ -109,6 +109,7 @@ module.exports = async function handler(req, res) {
       cachedAt: new Date().toISOString(),
     });
     await put('cache/workers.json', workersPayload, {
+      access: 'private',
       allowOverwrite: true,
       contentType: 'application/json',
       token: process.env.BLOB_READ_WRITE_TOKEN,
@@ -155,6 +156,7 @@ module.exports = async function handler(req, res) {
         });
 
         await put(`cache/week-${start}.json`, weekPayload, {
+          access: 'private',
           allowOverwrite: true,
           contentType: 'application/json',
           token: process.env.BLOB_READ_WRITE_TOKEN,
