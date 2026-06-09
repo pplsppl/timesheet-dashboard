@@ -16,8 +16,9 @@ const { put } = require('@vercel/blob');
 const BASE        = 'https://rest.ripplingapis.com';
 const TARGET_DEPT = 'Care Coordinators';
 
-// Only cache current week in cron — past weeks cached on-demand by timesheets.js
-const WEEKS_BACK = 0;
+// Cache current week + one additional past week per cron run (rotates through 8 weeks back)
+// This avoids timeout by spreading past-week caching across multiple 5-min cron runs
+const TOTAL_PAST_WEEKS = 8;
 
 async function fetchAllPages(url, apiKey) {
   const results = [];
@@ -115,8 +116,10 @@ module.exports = async function handler(req, res) {
       token: process.env.BLOB_READ_WRITE_TOKEN,
     });
 
-    // ── 5. For each week, fetch time entries + filter leave requests ──
-    for (let offset = 0; offset >= -WEEKS_BACK; offset--) {
+    // ── 5. Cache current week + 3 prior weeks in parallel ──
+    const weeksToCache = [0, -1, -2, -3];
+
+    await Promise.all(weeksToCache.map(async (offset) => {
       const { start, end } = getWeekBounds(offset);
       try {
         // Fetch all time entries for the week, filter to Care Coordinators in memory
@@ -166,7 +169,7 @@ module.exports = async function handler(req, res) {
       } catch (weekErr) {
         results.errors.push({ week: start, error: weekErr.message });
       }
-    }
+    })); // end Promise.all weeks
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[cron] completed in ${elapsed}s`, results);

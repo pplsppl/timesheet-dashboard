@@ -133,7 +133,9 @@ module.exports = async function handler(req, res) {
           if (r.ok) {
             const m = await r.json();
             const u = m.user || {};
-            managerMap[mid] = { id: mid, name: [u.first_name||'', u.last_name||''].filter(Boolean).join(' ') || m.work_email || mid };
+            const n = u.name || {};
+            const name = [n.given_name || n.preferred_given_name || '', n.family_name || n.preferred_family_name || ''].filter(Boolean).join(' ') || u.display_name || m.work_email || mid;
+            managerMap[mid] = { id: mid, name };
           }
         } catch { /* skip */ }
       }));
@@ -157,24 +159,24 @@ module.exports = async function handler(req, res) {
       }
 
       // Cache miss — fetch live and write to cache for next time
-      // Get Care Coordinator worker IDs first so we only fetch their time entries
-      const allWorkers = await fetchAllPages(`${BASE}/workers?expand=department`, apiKey);
-      const ccWorkers = allWorkers.filter(w =>
-        w.status === 'ACTIVE' && (w.department?.name || '') === 'Care Coordinators'
+      // Fetch all time entries for week + leave data in parallel
+      const filter = encodeURIComponent(
+        `start_time ge ${startDate}T00:00:00 and start_time le ${endDate}T23:59:59`
       );
-      // Fetch time entries per worker in parallel using worker_id eq filter
-      const [workerEntryArrays, allLeave, leaveTypes] = await Promise.all([
-        Promise.all(ccWorkers.map(w => {
-          const f = encodeURIComponent(
-            `start_time ge ${startDate}T00:00:00 and start_time le ${endDate}T23:59:59 and worker_id eq "${w.id}"`
-          );
-          return fetchAllPages(`${BASE}/time-entries?filter=${f}`, apiKey).catch(() => []);
-        })),
+      const [allEntries, allLeave, leaveTypes, allWorkers] = await Promise.all([
+        fetchAllPages(`${BASE}/time-entries?filter=${filter}`, apiKey),
         fetchAllPages(`${BASE}/leave-requests`, apiKey),
         fetchAllPages(`${BASE}/leave-types`, apiKey),
+        fetchAllPages(`${BASE}/workers?expand=department`, apiKey),
       ]);
 
-      const timeEntries = workerEntryArrays.flat();
+      // Filter time entries to Care Coordinators only
+      const ccWorkerIds = new Set(
+        allWorkers
+          .filter(w => w.status === 'ACTIVE' && (w.department?.name || '') === 'Care Coordinators')
+          .map(w => w.id)
+      );
+      const timeEntries = allEntries.filter(e => ccWorkerIds.has(e.worker_id || e.worker || ''));
 
       const leaveTypeMap = {};
       leaveTypes.forEach(lt => { leaveTypeMap[lt.id] = { name: lt.name, isPaid: lt.is_paid === true }; });

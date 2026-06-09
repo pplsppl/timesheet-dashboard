@@ -388,7 +388,9 @@ async function loadAll() {
     managers = wRes.managers || {};
     (wRes.results || []).forEach(w => {
       const u = w.user || {};
-      const name = [u.first_name || '', u.last_name || ''].filter(Boolean).join(' ') || w.work_email || w.id;
+      const n = u.name || {};
+      const name = [n.given_name || n.preferred_given_name || '', n.family_name || n.preferred_family_name || ''].filter(Boolean).join(' ')
+        || u.display_name || w.work_email || w.id;
       workers[w.id] = { name, title: w.title || '—', managerId: w.manager_id || null };
     });
 
