@@ -580,7 +580,7 @@ function renderFlagBanner(byEmp) {
   if (!flags.length) { banner.style.display = 'none'; return; }
 
   banner.style.display = 'block';
-  document.getElementById('flagTitle').textContent = `${flags.length} entr${flags.length === 1 ? 'y' : 'ies'} over 8 hours — review required`;
+  document.getElementById('flagTitle').textContent = `${flags.length} entr${flags.length === 1 ? 'y' : 'ies'} over 10.5 hours — review required`;
   document.getElementById('flagBody').innerHTML = flags.map(f => `
     <div class="flag-row">
       <i class="ti ti-clock-exclamation"></i>
