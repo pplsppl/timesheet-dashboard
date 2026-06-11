@@ -1,18 +1,21 @@
 /**
- * Vercel Serverless Function: /api/auth
+ * /api/auth
+ * GET  → validate session, return { ok, email, name, role, mustChangePassword }
+ * POST { email, password } → validate credentials, issue 24hr session cookie
  *
- * POST { password } → sets a signed session cookie valid for 24 hours
- * GET              → validates the current session cookie
- *
- * Env vars required (set in Vercel dashboard):
- *   DASHBOARD_PASSWORD  — the shared password managers enter
- *   SESSION_SECRET      — random string to sign tokens (openssl rand -hex 32)
+ * Env vars: SESSION_SECRET, BLOB_READ_WRITE_TOKEN
  */
 
 const crypto = require('crypto');
+const { list } = require('@vercel/blob');
 
 const COOKIE_NAME = 'ops_session';
 const TTL_MS      = 24 * 60 * 60 * 1000;
+const USERS_KEY   = 'users/users.json';
+
+function hashPw(pw, salt) {
+  return crypto.pbkdf2Sync(pw, salt, 100000, 64, 'sha512').toString('hex');
+}
 
 function sign(payload, secret) {
   const b64 = Buffer.from(JSON.stringify(payload)).toString('base64');
@@ -24,63 +27,91 @@ function verify(token, secret) {
   try {
     const [b64, sig] = token.split('.');
     const expected   = crypto.createHmac('sha256', secret).update(b64).digest('hex');
-    const sigBuf      = Buffer.from(sig,      'hex');
-    const expBuf      = Buffer.from(expected, 'hex');
-    if (sigBuf.length !== expBuf.length) return null;
-    if (!crypto.timingSafeEqual(sigBuf, expBuf)) return null;
-    const payload = JSON.parse(Buffer.from(b64, 'base64').toString());
-    return Date.now() <= payload.exp ? payload : null;
-  } catch {
-    return null;
-  }
+    const a = Buffer.from(sig, 'hex'), b = Buffer.from(expected, 'hex');
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+    const p = JSON.parse(Buffer.from(b64, 'base64').toString());
+    return Date.now() <= p.exp ? p : null;
+  } catch { return null; }
 }
 
-function parseCookies(header = '') {
+function parseCookies(h = '') {
   return Object.fromEntries(
-    header.split(';')
-      .map(c => c.trim().split('='))
-      .filter(p => p.length >= 2)
-      .map(([k, ...v]) => [k.trim(), v.join('=').trim()])
+    h.split(';').map(c => c.trim().split('=')).filter(p => p.length >= 2)
+     .map(([k, ...v]) => [k.trim(), v.join('=').trim()])
   );
 }
 
-module.exports = async function handler(req, res) {
-  const secret   = process.env.SESSION_SECRET;
-  const password = process.env.DASHBOARD_PASSWORD;
+async function getUsers(blobToken) {
+  try {
+    const { blobs } = await list({ prefix: USERS_KEY, token: blobToken });
+    const blob = blobs.find(b => b.pathname === USERS_KEY);
+    if (!blob) return null;
+    const r = await fetch(blob.url);
+    if (!r.ok) return null;
+    return r.json();
+  } catch { return null; }
+}
 
-  if (!secret || !password) {
-    return res.status(500).json({ error: 'Server misconfigured: missing SESSION_SECRET or DASHBOARD_PASSWORD.' });
-  }
+module.exports = async function handler(req, res) {
+  const secret    = process.env.SESSION_SECRET;
+  const blobToken = process.env.BLOB_READ_WRITE_TOKEN;
+  res.setHeader('Content-Type', 'application/json');
+
+  if (!secret || !blobToken) return res.status(500).json({ error: 'Server misconfigured.' });
 
   // GET — validate session
   if (req.method === 'GET') {
-    const cookies = parseCookies(req.headers.cookie || '');
-    const token   = cookies[COOKIE_NAME];
-    if (token && verify(token, secret)) {
-      return res.status(200).json({ ok: true });
+    const token = parseCookies(req.headers.cookie || '')[COOKIE_NAME];
+    if (token) {
+      const p = verify(token, secret);
+      if (p) return res.status(200).json({
+        ok: true,
+        email: p.email,
+        name:  p.name,
+        role:  p.role,
+        mustChangePassword: p.mustChangePassword || false,
+      });
     }
     return res.status(401).json({ ok: false });
   }
 
   // POST — login
   if (req.method === 'POST') {
-    const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+    const body     = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
+    const { email, password } = body;
+    if (!email || !password) return res.status(400).json({ error: 'Email and password required.' });
 
-    if (!body.password || body.password !== password) {
-      return res.status(401).json({ error: 'Incorrect password.' });
+    const data = await getUsers(blobToken);
+    if (!data) return res.status(503).json({ error: 'User store not initialised. Run /api/setup first.' });
+
+    const user    = (data.users || []).find(u => u.email.toLowerCase() === email.trim().toLowerCase());
+    const salt    = user ? user.salt : 'dummy-salt-prevents-timing-attack-x';
+    const testHash = hashPw(password, salt);
+    if (!user || testHash !== (user.hash || '')) {
+      return res.status(401).json({ error: 'Incorrect email or password.' });
     }
 
-    const token = sign({ iat: Date.now(), exp: Date.now() + TTL_MS }, secret);
+    const token = sign({
+      email: user.email,
+      name:  user.name,
+      role:  user.role,
+      mustChangePassword: user.mustChangePassword || false,
+      iat: Date.now(),
+      exp: Date.now() + TTL_MS,
+    }, secret);
+
     res.setHeader('Set-Cookie', [
-      `${COOKIE_NAME}=${token}`,
-      'Path=/',
-      'HttpOnly',
-      'SameSite=Strict',
-      `Max-Age=${TTL_MS / 1000}`,
-      'Secure',
+      `${COOKIE_NAME}=${token}`, 'Path=/', 'HttpOnly', 'SameSite=Strict',
+      `Max-Age=${TTL_MS / 1000}`, 'Secure',
     ].join('; '));
 
-    return res.status(200).json({ ok: true });
+    return res.status(200).json({
+      ok: true,
+      email: user.email,
+      name:  user.name,
+      role:  user.role,
+      mustChangePassword: user.mustChangePassword || false,
+    });
   }
 
   return res.status(405).json({ error: 'Method not allowed.' });
