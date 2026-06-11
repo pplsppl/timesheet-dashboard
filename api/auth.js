@@ -7,7 +7,7 @@
  */
 
 const crypto = require('crypto');
-const { list } = require('@vercel/blob');
+const { get } = require('@vercel/blob');
 
 const COOKIE_NAME = 'ops_session';
 const TTL_MS      = 24 * 60 * 60 * 1000;
@@ -43,12 +43,17 @@ function parseCookies(h = '') {
 
 async function getUsers(blobToken) {
   try {
-    const { blobs } = await list({ prefix: USERS_KEY, token: blobToken });
-    const blob = blobs.find(b => b.pathname === USERS_KEY);
-    if (!blob) return null;
-    const r = await fetch(blob.url);
-    if (!r.ok) return null;
-    return r.json();
+    const result = await get(USERS_KEY, { access: 'private', token: blobToken });
+    if (!result || result.statusCode !== 200 || !result.stream) return null;
+    const chunks = [];
+    const reader = result.stream.getReader();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+    }
+    const text = Buffer.concat(chunks.map(c => Buffer.from(c))).toString('utf8');
+    return JSON.parse(text);
   } catch { return null; }
 }
 
