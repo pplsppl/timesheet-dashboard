@@ -412,7 +412,9 @@ function showChangePassword() {
 }
 function showDashboard() {
   hide('loginScreen'); hide('changePasswordScreen');
-  show('dashboard');
+  // #dashboard is display:none in the stylesheet, so clearing the inline style
+  // (what show() does) leaves it hidden. Set the display value explicitly.
+  document.getElementById('dashboard').style.display = 'block';
   if (currentUser?.role === 'admin') show('adminBtn');
   else hide('adminBtn');
   updateWeekLabel();
