@@ -59,6 +59,18 @@ async function invalidateWeek(weekStart, blobToken) {
   }
 }
 
+async function ripplingError(resp, phase) {
+  const raw = await resp.text().catch(() => '');
+  let msg = raw;
+  try {
+    const j = JSON.parse(raw);
+    msg = j.detail || j.message || j.error
+      || (Array.isArray(j.errors) ? j.errors.map(e => e.detail || e.message || JSON.stringify(e)).join('; ') : '')
+      || raw;
+  } catch { /* not JSON — keep raw text */ }
+  return `Rippling ${resp.status} on ${phase}: ${String(msg).slice(0, 400) || '(no body)'}`;
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json');
 
@@ -85,10 +97,7 @@ module.exports = async function handler(req, res) {
   try {
     // 1. Read current status to decide whether we must unlock first.
     const getRes = await fetch(`${BASE}/time-entries/${entryId}`, { headers: authHeaders });
-    if (!getRes.ok) {
-      const err = await getRes.json().catch(() => ({}));
-      return res.status(getRes.status).json({ error: err.detail || err.message || `Rippling ${getRes.status} on fetch` });
-    }
+    if (!getRes.ok) return res.status(getRes.status).json({ error: await ripplingError(getRes, 'fetch') });
     const entry = await getRes.json();
 
     // 2. If locked, revert to DRAFT so the delete is permitted.
@@ -98,10 +107,7 @@ module.exports = async function handler(req, res) {
         headers: authHeaders,
         body: JSON.stringify({ worker_id: workerId, status: 'DRAFT' }),
       });
-      if (!patchRes.ok) {
-        const err = await patchRes.json().catch(() => ({}));
-        return res.status(patchRes.status).json({ error: err.detail || err.message || `Rippling ${patchRes.status} on unlock` });
-      }
+      if (!patchRes.ok) return res.status(patchRes.status).json({ error: await ripplingError(patchRes, 'unlock') });
     }
 
     // 3. Delete.
@@ -109,10 +115,7 @@ module.exports = async function handler(req, res) {
       method: 'DELETE',
       headers: authHeaders,
     });
-    if (!delRes.ok) {
-      const err = await delRes.json().catch(() => ({}));
-      return res.status(delRes.status).json({ error: err.detail || err.message || `Rippling ${delRes.status} on delete` });
-    }
+    if (!delRes.ok) return res.status(delRes.status).json({ error: await ripplingError(delRes, 'delete') });
 
     await invalidateWeek(weekStart, blobToken);
     return res.status(200).json({ ok: true });

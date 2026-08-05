@@ -68,6 +68,20 @@ async function invalidateWeek(weekStart, blobToken) {
   }
 }
 
+// Pull the most useful message out of a Rippling error response (JSON shapes vary,
+// and some errors aren't JSON at all), so the UI shows the real reason for a failure.
+async function ripplingError(resp, phase) {
+  const raw = await resp.text().catch(() => '');
+  let msg = raw;
+  try {
+    const j = JSON.parse(raw);
+    msg = j.detail || j.message || j.error
+      || (Array.isArray(j.errors) ? j.errors.map(e => e.detail || e.message || JSON.stringify(e)).join('; ') : '')
+      || raw;
+  } catch { /* not JSON — keep raw text */ }
+  return `Rippling ${resp.status} on ${phase}: ${String(msg).slice(0, 400) || '(no body)'}`;
+}
+
 module.exports = async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json');
 
@@ -94,45 +108,33 @@ module.exports = async function handler(req, res) {
   try {
     // 1. Fetch the current entry (Rippling's documented GET-then-PATCH flow).
     const getRes = await fetch(`${BASE}/time-entries/${entryId}`, { headers: authHeaders });
-    if (!getRes.ok) {
-      const err = await getRes.json().catch(() => ({}));
-      return res.status(getRes.status).json({ error: err.detail || err.message || `Rippling ${getRes.status} on fetch` });
-    }
+    if (!getRes.ok) return res.status(getRes.status).json({ error: await ripplingError(getRes, 'fetch') });
     const entry = await getRes.json();
 
     // 2. Adjust the work-segment boundaries (segments without a break_type_id).
+    //    Rippling time entries are segment-based; the clock in/out live in the segments,
+    //    so we modify the fetched segment structure and send it back unchanged otherwise.
     const segments = Array.isArray(entry.segments) ? entry.segments : [];
     const workSegs = segments.filter(s => !s.break_type_id);
-    if (workSegs.length) {
-      workSegs[0].start_time                     = clockInUtc;
-      workSegs[workSegs.length - 1].end_time     = clockOutUtc;
+    if (!workSegs.length) {
+      return res.status(422).json({ error: 'This entry has no editable work segment (summary-only entry).' });
     }
+    workSegs[0].start_time                 = clockInUtc;
+    workSegs[workSegs.length - 1].end_time = clockOutUtc;
 
     // 3. Auto-revert a locked entry to DRAFT so the edit is accepted.
     let status = entry.status;
     if (LOCKED.includes(status)) status = 'DRAFT';
 
-    // 4. PATCH back. Send both the top-level times (what the dashboard displays) and
-    //    the segments (what hours are computed from) so Rippling stays consistent.
-    const patchBody = {
-      worker_id:  workerId,
-      start_time: clockInUtc,
-      end_time:   clockOutUtc,
-      status,
-    };
-    if (workSegs.length) patchBody.segments = segments;
-
+    // 4. PATCH back the modified segments (source of truth). Rippling recomputes the
+    //    top-level times and summary hours from the segments.
     const patchRes = await fetch(`${BASE}/time-entries/${entryId}`, {
       method: 'PATCH',
       headers: authHeaders,
-      body: JSON.stringify(patchBody),
+      body: JSON.stringify({ worker_id: workerId, segments, status }),
     });
 
-    if (!patchRes.ok) {
-      const err = await patchRes.json().catch(() => ({}));
-      // Surface Rippling's own message (e.g. one-entry-per-day / overlap) verbatim.
-      return res.status(patchRes.status).json({ error: err.detail || err.message || `Rippling ${patchRes.status} on update` });
-    }
+    if (!patchRes.ok) return res.status(patchRes.status).json({ error: await ripplingError(patchRes, 'update') });
 
     const data = await patchRes.json().catch(() => ({}));
     await invalidateWeek(weekStart, blobToken);
