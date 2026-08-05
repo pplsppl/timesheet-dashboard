@@ -86,8 +86,9 @@ module.exports = async function handler(req, res) {
         if (r.ok) {
           const m = await r.json();
           const u = m.user || {};
-          const name = [u.first_name || '', u.last_name || ''].filter(Boolean).join(' ')
-            || m.work_email || mid;
+          const n = u.name || {};
+          const name = [n.given_name || n.preferred_given_name || '', n.family_name || n.preferred_family_name || '']
+            .filter(Boolean).join(' ') || u.display_name || m.work_email || mid;
           managerMap[mid] = { id: mid, name };
         }
       } catch { /* skip */ }
@@ -104,8 +105,15 @@ module.exports = async function handler(req, res) {
     const allLeaveRequests = await fetchAllPages(`${BASE}/leave-requests`, apiKey);
 
     // ── 4. Write workers + managers to blob (rarely changes) ──
+    // Attach each worker's IANA timezone (from the expanded user record) so the
+    // frontend can render entries in the employee's local zone. Falls back to null
+    // (frontend then defaults to Eastern). Log coverage so we can tell if the
+    // expand didn't include timezone and we need a /users fetch instead.
+    const careCoordsWithTz = careCoords.map(w => ({ ...w, tz: (w.user && w.user.timezone) || null }));
+    console.log(`[cron] timezone populated for ${careCoordsWithTz.filter(w => w.tz).length}/${careCoordsWithTz.length} workers`);
+
     const workersPayload = JSON.stringify({
-      results:  careCoords,
+      results:  careCoordsWithTz,
       managers: managerMap,
       cachedAt: new Date().toISOString(),
     });

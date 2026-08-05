@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.4.4/luxon.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
@@ -68,6 +69,18 @@
     .status-txt { font-size:12px; color:var(--muted); }
     .week-nav { display:flex; align-items:center; gap:4px; }
     .week-nav .wlabel { font-size:12.5px; color:var(--muted); min-width:148px; text-align:center; font-weight:500; }
+    .zone-toggle { display:inline-flex; border:0.5px solid var(--border-md); border-radius:var(--r); overflow:hidden; }
+    .zone-btn { padding:6px 11px; background:none; border:none; color:var(--muted); font-family:inherit; font-size:12.5px; font-weight:500; cursor:pointer; }
+    .zone-btn:hover { background:var(--bg); }
+    .zone-btn.active { background:var(--accent); color:#fff; }
+    .row-act { padding:3px 7px; border:0.5px solid var(--border-md); border-radius:var(--r); background:none; color:var(--muted); cursor:pointer; font-family:inherit; font-size:11px; vertical-align:middle; }
+    .row-act:hover { background:var(--bg); color:var(--text); }
+    .row-act i { font-size:13px; }
+    .row-act-del:hover { color:var(--red-tx); background:var(--red-lt); }
+    .row-act-save { color:#fff; background:var(--accent); border-color:var(--accent); }
+    .row-act-save:hover { opacity:.88; }
+    .edit-time-input { width:88px; padding:4px 6px; border:0.5px solid var(--accent); border-radius:var(--r); font-family:'DM Mono',monospace; font-size:12px; background:var(--surface); color:var(--text); }
+    tr.punch-editing td { background:var(--accent-lt) !important; }
     .icon-btn { width:30px; height:30px; border:0.5px solid var(--border-md); border-radius:var(--r); background:none; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:15px; cursor:pointer; }
     .icon-btn:hover { background:var(--bg); }
     .icon-btn:disabled { opacity:.35; cursor:default; }
@@ -256,6 +269,10 @@
         <span class="wlabel" id="weekLabel">—</span>
         <button class="icon-btn" id="nextBtn" onclick="shiftWeek(1)"><i class="ti ti-chevron-right"></i></button>
       </div>
+      <div class="zone-toggle" title="Display timezone">
+        <button id="zoneLocalBtn" class="zone-btn active" onclick="setZone('local')">Local</button>
+        <button id="zoneMtnBtn" class="zone-btn" onclick="setZone('mountain')">Mountain</button>
+      </div>
       <button class="text-btn" id="todayBtn" onclick="goCurrentWeek()" style="display:none"><i class="ti ti-home"></i> Current week</button>
       <button class="text-btn" onclick="refreshData()"><i class="ti ti-refresh"></i> Refresh</button>
       <button class="text-btn" onclick="exportCSV()"><i class="ti ti-download"></i> Export CSV</button>
@@ -367,9 +384,22 @@ let expandedId   = null;
 let flagOpen     = true;
 let adminVisible = false;
 let lastTempPw   = '';
+let displayZone        = 'local';   // 'local' | 'mountain' — affects rendering only
+let editingEntryId     = null;      // entry currently in inline-edit mode
+let currentEntriesById = {};        // id -> entry lookup for edit/delete handlers
 
 const HOURLY_FT_ID = '64cc115cf2b341a468e41d24';
 const HOURLY_PT_ID = '64cc115cf2b341a468e41d27';
+
+/* Timezone display. The toggle only changes how instants are rendered — it never
+   re-buckets which week an entry belongs to, and never changes hours/OT (durations). */
+const { DateTime } = luxon;
+const MOUNTAIN_TZ = 'America/Denver';
+const DEFAULT_TZ  = 'America/New_York';
+function zoneFor(workerId){ return (workers[workerId] && workers[workerId].tz) || DEFAULT_TZ; }
+function activeZone(workerId){ return displayZone === 'mountain' ? MOUNTAIN_TZ : zoneFor(workerId); }
+function fmtIsoTime(iso, zone){ return iso ? DateTime.fromISO(iso).setZone(zone).toFormat('h:mm a') : null; }
+function fmtIsoDay(iso, zone){ return iso ? DateTime.fromISO(iso).setZone(zone).toFormat('EEE, LLL d') : '—'; }
 
 const LEAVE_BADGE = {
   'Paid Time Off - Ops':       { cls:'b-pto',    label:'PTO' },
@@ -412,9 +442,7 @@ function showChangePassword() {
 }
 function showDashboard() {
   hide('loginScreen'); hide('changePasswordScreen');
-  // #dashboard is display:none in the stylesheet, so clearing the inline style
-  // (what show() does) leaves it hidden. Set the display value explicitly.
-  document.getElementById('dashboard').style.display = 'block';
+  show('dashboard');
   if (currentUser?.role === 'admin') show('adminBtn');
   else hide('adminBtn');
   updateWeekLabel();
@@ -581,7 +609,8 @@ async function loadAll() {
       const u = w.user || {}, n = u.name || {};
       const name = [n.given_name||n.preferred_given_name||'', n.family_name||n.preferred_family_name||''].filter(Boolean).join(' ')
         || u.display_name || w.work_email || w.id;
-      workers[w.id] = { name, title:w.title||'—', managerId:w.manager_id||null, employmentTypeId:w.employment_type_id||null };
+      const tz = w.tz || (u && u.timezone) || null;
+      workers[w.id] = { name, title:w.title||'—', managerId:w.manager_id||null, employmentTypeId:w.employment_type_id||null, tz };
     });
     timeEntries = wkRes.timeEntries   || [];
     timeOff     = wkRes.leaveRequests || [];
@@ -731,7 +760,7 @@ function renderMetrics(t){
 function renderFlagBanner(byEmp){
   const flags=[];
   Object.entries(byEmp).forEach(([wid,d])=>{
-    d.flags.forEach(f=>{ const w=workers[wid]||{name:wid}; const ds=f.date?new Date(f.date).toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}):'—'; flags.push({name:w.name,date:ds,hrs:f.hrs}); });
+    d.flags.forEach(f=>{ const w=workers[wid]||{name:wid}; const ds=f.date?DateTime.fromISO(f.date).setZone(activeZone(wid)).toFormat('EEE, LLL d'):'—'; flags.push({name:w.name,date:ds,hrs:f.hrs}); });
   });
   const banner=document.getElementById('flagBanner');
   if(!flags.length){banner.style.display='none';return;}
@@ -798,9 +827,11 @@ function renderTable(byEmpArg){
 
 function buildPunchTable(entries){
   if(!entries||!entries.length)return`<div style="padding:14px 16px;font-size:12.5px;color:var(--hint)">No entries this week</div>`;
+  entries.forEach(e=>{ currentEntriesById[e.id]=e; });   // lookup for edit/delete handlers
   const rows=entries.map(e=>{
-    const dayLabel=e.date?e.date.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}):'—';
+    const zone=activeZone(e.workerId);
     if(e.isLeave){
+      const dayLabel=e.date?e.date.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}):'—';
       const lb=leaveBadge(e.leaveType);
       const timeStr=e.isPartial&&e.startTimeStr?`<span class="punch-time">${e.startTimeStr}</span> · ${e.hrs.toFixed(1)}h`:`${e.hrs.toFixed(1)}h`;
       const commentHtml=e.comments.filter(Boolean).map(c=>`<div class="comment-tag"><i class="ti ti-message-circle"></i><span>${esc(c)}</span></div>`).join('');
@@ -809,8 +840,17 @@ function buildPunchTable(entries){
         <td colspan="3" style="font-size:12px;color:var(--muted)">${timeStr}</td>
         <td style="width:100px"><span class="badge ${lb.cls}">${esc(lb.label)}</span>${e.isPaid?'':' <span style="font-size:10.5px;color:var(--hint)">(unpaid)</span>'}</td>
         <td class="r" style="width:60px"><span class="num" style="font-weight:500;color:var(--green)">${e.hrs.toFixed(1)}</span></td>
-        <td style="width:80px"></td>
+        <td style="width:120px"></td>
       </tr>`;
+    }
+    // ── worked entry — times & day rendered in the active zone ──
+    const dayLabel=fmtIsoDay(e.clockIn||e.clockOut, zone);
+    const inStr=fmtIsoTime(e.clockIn, zone)||'—';
+    let outStr=fmtIsoTime(e.clockOut, zone)||'—';
+    if(e.clockIn&&e.clockOut){
+      const inD =DateTime.fromISO(e.clockIn ).setZone(zone).startOf('day');
+      const outD=DateTime.fromISO(e.clockOut).setZone(zone).startOf('day');
+      if(outD>inD) outStr+=' <span class="dim" style="font-size:10.5px">(+1)</span>';
     }
     const breakStr=e.breakHrs>0?`<span class="punch-time" style="color:var(--muted)">−${Math.round(e.breakHrs*60)}m</span>`:'<span class="dim">—</span>';
     const cats={}; e.segments.forEach(s=>{const c=segCat(s.display_name);cats[c]=(cats[c]||0)+hrsFromSeg(s);});
@@ -820,23 +860,44 @@ function buildPunchTable(entries){
     const commentHtml=e.comments.map(c=>`<div class="comment-tag"><i class="ti ti-message-circle"></i><span>${esc(c)}</span></div>`).join('');
     const canApprove=e.status==='DRAFT'||e.status==='draft';
     const isApproved=e.status==='APPROVED'||e.status==='FINALIZED'||e.status==='PAID';
-    const approveCell=canApprove
-      ?`<button onclick="approveEntry('${e.id}','${e.workerId}',this)" style="font-size:11px;padding:3px 9px;border:0.5px solid var(--accent);border-radius:var(--r);background:none;color:var(--accent);cursor:pointer;font-family:inherit;font-weight:500">Approve</button>`
-      :isApproved?`<span style="font-size:11px;color:var(--green);font-weight:500">✓ Approved</span>`:'';
+
+    // ── inline edit mode ──
+    if(editingEntryId===e.id){
+      const inVal =e.clockIn ?DateTime.fromISO(e.clockIn ).setZone(zone).toFormat('HH:mm'):'';
+      const outVal=e.clockOut?DateTime.fromISO(e.clockOut).setZone(zone).toFormat('HH:mm'):'';
+      const zoneAbbr=DateTime.now().setZone(zone).toFormat('ZZZZ');
+      return `<tr class="punch-editing">
+        <td style="width:140px"><div style="font-size:12px;font-weight:500">${dayLabel}</div><div class="dim" style="font-size:10.5px;margin-top:2px">editing · ${zoneAbbr}</div></td>
+        <td style="width:95px"><input type="time" class="edit-time-input" id="edit-in-${e.id}" value="${inVal}"></td>
+        <td style="width:95px"><input type="time" class="edit-time-input" id="edit-out-${e.id}" value="${outVal}"></td>
+        <td style="width:65px">${breakStr}</td>
+        <td style="width:100px"><span class="badge ${badgeCls}">${badgeLbl}</span></td>
+        <td class="r" style="width:60px"><span class="num dim">${e.hrs.toFixed(1)}</span></td>
+        <td style="width:120px;text-align:right;white-space:nowrap">
+          <button id="edit-save-${e.id}" class="row-act row-act-save" onclick="saveEdit('${e.id}')">Save</button>
+          <button class="row-act" onclick="cancelEdit()">Cancel</button>
+        </td>
+      </tr>`;
+    }
+
+    const approveBtn=canApprove
+      ?`<button onclick="approveEntry('${e.id}','${e.workerId}',this)" style="font-size:11px;padding:3px 9px;border:0.5px solid var(--accent);border-radius:var(--r);background:none;color:var(--accent);cursor:pointer;font-family:inherit;font-weight:500">Approve</button> `
+      :isApproved?`<span style="font-size:11px;color:var(--green);font-weight:500" title="Approved">✓</span> `:'';
+    const actions=`${approveBtn}<button class="row-act" title="Edit times" onclick="startEdit('${e.id}')"><i class="ti ti-pencil"></i></button> <button class="row-act row-act-del" title="Delete entry" onclick="deleteEntry('${e.id}')"><i class="ti ti-trash"></i></button>`;
     return `<tr class="${e.flagged?'punch-flagged':''}">
       <td style="width:140px"><div style="font-size:12px;font-weight:500">${dayLabel}</div>${flagHtml}${commentHtml}</td>
-      <td style="width:95px"><span class="punch-time">${fmtTime(e.clockIn)||'—'}</span></td>
-      <td style="width:95px"><span class="punch-time">${fmtTime(e.clockOut)||'—'}</span></td>
+      <td style="width:95px"><span class="punch-time">${inStr}</span></td>
+      <td style="width:95px"><span class="punch-time">${outStr}</span></td>
       <td style="width:65px">${breakStr}</td>
       <td style="width:100px"><span class="badge ${badgeCls}">${badgeLbl}</span></td>
       <td class="r" style="width:60px"><span class="num" style="font-weight:500">${e.hrs.toFixed(1)}</span></td>
-      <td style="width:80px;text-align:center">${approveCell}</td>
+      <td style="width:120px;text-align:right;white-space:nowrap">${actions}</td>
     </tr>`;
   }).join('');
   return `<table class="punch-table"><thead><tr>
     <th style="width:140px">Date</th><th style="width:95px">Clock in</th><th style="width:95px">Clock out</th>
     <th style="width:65px">Breaks</th><th style="width:100px">Type</th>
-    <th class="r" style="width:60px">Hours</th><th style="width:80px;text-align:center">Approval</th>
+    <th class="r" style="width:60px">Hours</th><th style="width:120px;text-align:right">Actions</th>
   </tr></thead><tbody>${rows}</tbody></table>`;
 }
 
@@ -853,6 +914,72 @@ async function approveEntry(entryId, workerId, btn) {
     if(r.ok&&d.ok) btn.outerHTML=`<span style="font-size:11px;color:var(--green);font-weight:500">✓ Approved</span>`;
     else { btn.disabled=false; btn.textContent='Approve'; alert('Approval failed: '+(d.error||'Unknown error')); }
   } catch { btn.disabled=false; btn.textContent='Approve'; alert('Network error.'); }
+}
+
+/* ══════════════════════════════════
+   Timezone toggle
+══════════════════════════════════ */
+function setZone(z){
+  if(displayZone===z) return;
+  displayZone=z;
+  document.getElementById('zoneLocalBtn').classList.toggle('active', z==='local');
+  document.getElementById('zoneMtnBtn').classList.toggle('active', z==='mountain');
+  renderAll();   // re-render only — week membership and hours are unchanged
+}
+
+/* ══════════════════════════════════
+   Edit / delete entry
+══════════════════════════════════ */
+function startEdit(entryId){ editingEntryId=entryId; renderTable(); }
+function cancelEdit(){ editingEntryId=null; renderTable(); }
+
+async function saveEdit(entryId){
+  const e=currentEntriesById[entryId];
+  if(!e){ alert('Entry not found — refresh and try again.'); return; }
+  const zone=activeZone(e.workerId);
+  const inEl =document.getElementById('edit-in-'+entryId);
+  const outEl=document.getElementById('edit-out-'+entryId);
+  const inVal =inEl ?inEl.value :'';
+  const outVal=outEl?outEl.value:'';
+  if(!inVal||!outVal){ alert('Enter both a clock-in and clock-out time.'); return; }
+  const [inH,inM]  =inVal.split(':').map(Number);
+  const [outH,outM]=outVal.split(':').map(Number);
+  // Anchor to the entry's existing calendar day AS SEEN IN THE ACTIVE ZONE, apply the
+  // typed wall-clock time in that zone, then convert to a UTC instant for Rippling.
+  const base=DateTime.fromISO(e.clockIn||e.clockOut).setZone(zone);
+  let newIn =DateTime.fromObject({year:base.year,month:base.month,day:base.day,hour:inH, minute:inM }, {zone});
+  let newOut=DateTime.fromObject({year:base.year,month:base.month,day:base.day,hour:outH,minute:outM}, {zone});
+  if(newOut<=newIn) newOut=newOut.plus({days:1});   // clock-out past midnight → next day
+  const btn=document.getElementById('edit-save-'+entryId);
+  if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
+  try{
+    const r=await fetch('/api/edit-entry',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      entryId,
+      workerId:e.workerId,
+      clockInUtc: newIn.toUTC().toISO({suppressMilliseconds:true}),
+      clockOutUtc:newOut.toUTC().toISO({suppressMilliseconds:true}),
+      weekStart: weekBounds().startStr,
+    })});
+    const dj=await r.json();
+    if(r.ok&&dj.ok){ editingEntryId=null; await loadAll(); }
+    else { if(btn){btn.disabled=false;btn.textContent='Save';} alert('Edit failed: '+(dj.error||'Unknown error')); }
+  }catch{ if(btn){btn.disabled=false;btn.textContent='Save';} alert('Network error — please try again.'); }
+}
+
+async function deleteEntry(entryId){
+  const e=currentEntriesById[entryId];
+  if(!e){ alert('Entry not found — refresh and try again.'); return; }
+  const zone=activeZone(e.workerId);
+  const dayStr=fmtIsoDay(e.clockIn||e.clockOut, zone);
+  if(!confirm(`Delete this entry for ${dayStr}? This permanently removes it from Rippling.`)) return;
+  try{
+    const r=await fetch('/api/delete-entry',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
+      entryId, workerId:e.workerId, weekStart: weekBounds().startStr,
+    })});
+    const dj=await r.json();
+    if(r.ok&&dj.ok){ await loadAll(); }
+    else alert('Delete failed: '+(dj.error||'Unknown error'));
+  }catch{ alert('Network error — please try again.'); }
 }
 
 /* ══════════════════════════════════

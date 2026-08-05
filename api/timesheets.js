@@ -140,7 +140,8 @@ module.exports = async function handler(req, res) {
         } catch { /* skip */ }
       }));
 
-      return res.status(200).json({ results: careCoords, managers: managerMap, fromCache: false });
+      const careCoordsWithTz = careCoords.map(w => ({ ...w, tz: (w.user && w.user.timezone) || null }));
+      return res.status(200).json({ results: careCoordsWithTz, managers: managerMap, fromCache: false });
 
     } else if (endpoint === 'week') {
       if (!startDate || !endDate) return res.status(400).json({ error: 'startDate and endDate required.' });
