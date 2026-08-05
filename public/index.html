@@ -943,15 +943,20 @@ async function saveEdit(entryId){
   const outEl=document.getElementById('edit-out-'+entryId);
   const inVal =inEl ?inEl.value :'';
   const outVal=outEl?outEl.value:'';
-  if(!inVal||!outVal){ alert('Enter both a clock-in and clock-out time.'); return; }
-  const [inH,inM]  =inVal.split(':').map(Number);
-  const [outH,outM]=outVal.split(':').map(Number);
+  if(!inVal){ alert('Enter a clock-in time.'); return; }
+  const [inH,inM]=inVal.split(':').map(Number);
   // Anchor to the entry's existing calendar day AS SEEN IN THE ACTIVE ZONE, apply the
   // typed wall-clock time in that zone, then convert to a UTC instant for Rippling.
-  const base=DateTime.fromISO(e.clockIn||e.clockOut).setZone(zone);
-  let newIn =DateTime.fromObject({year:base.year,month:base.month,day:base.day,hour:inH, minute:inM }, {zone});
-  let newOut=DateTime.fromObject({year:base.year,month:base.month,day:base.day,hour:outH,minute:outM}, {zone});
-  if(newOut<=newIn) newOut=newOut.plus({days:1});   // clock-out past midnight → next day
+  const base=DateTime.fromISO(e.clockIn||e.clockOut||new Date().toISOString()).setZone(zone);
+  const newIn=DateTime.fromObject({year:base.year,month:base.month,day:base.day,hour:inH,minute:inM},{zone});
+  // Clock-out is optional — an open/mid-shift entry (fixing a forgotten clock-in) has none.
+  let clockOutUtc=null;
+  if(outVal){
+    const [outH,outM]=outVal.split(':').map(Number);
+    let newOut=DateTime.fromObject({year:base.year,month:base.month,day:base.day,hour:outH,minute:outM},{zone});
+    if(newOut<=newIn) newOut=newOut.plus({days:1});   // clock-out past midnight → next day
+    clockOutUtc=newOut.toUTC().toISO({suppressMilliseconds:true});
+  }
   const btn=document.getElementById('edit-save-'+entryId);
   if(btn){ btn.disabled=true; btn.textContent='Saving…'; }
   try{
@@ -959,7 +964,7 @@ async function saveEdit(entryId){
       entryId,
       workerId:e.workerId,
       clockInUtc: newIn.toUTC().toISO({suppressMilliseconds:true}),
-      clockOutUtc:newOut.toUTC().toISO({suppressMilliseconds:true}),
+      clockOutUtc,
       weekStart: weekBounds().startStr,
     })});
     const dj=await r.json();

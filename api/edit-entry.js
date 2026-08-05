@@ -95,8 +95,10 @@ module.exports = async function handler(req, res) {
 
   const body = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {});
   const { entryId, workerId, clockInUtc, clockOutUtc, weekStart } = body;
-  if (!entryId || !workerId || !clockInUtc || !clockOutUtc) {
-    return res.status(400).json({ error: 'entryId, workerId, clockInUtc and clockOutUtc are required.' });
+  // clockOutUtc is optional: an open/in-progress shift (e.g. fixing a forgotten
+  // clock-in mid-shift) has no clock-out yet.
+  if (!entryId || !workerId || !clockInUtc) {
+    return res.status(400).json({ error: 'entryId, workerId and clockInUtc are required.' });
   }
 
   const authHeaders = {
@@ -111,27 +113,42 @@ module.exports = async function handler(req, res) {
     if (!getRes.ok) return res.status(getRes.status).json({ error: await ripplingError(getRes, 'fetch') });
     const entry = await getRes.json();
 
-    // 2. Adjust the work-segment boundaries (segments without a break_type_id).
-    //    Rippling time entries are segment-based; the clock in/out live in the segments,
-    //    so we modify the fetched segment structure and send it back unchanged otherwise.
+    // 2. Split the read-side `segments` into work shifts vs. breaks, then apply the edit.
+    //    clockOutUtc may be null — e.g. a manager fixing a forgotten clock-in mid-shift,
+    //    where the shift is still open. In that case we only move the start.
     const segments = Array.isArray(entry.segments) ? entry.segments : [];
-    const workSegs = segments.filter(s => !s.break_type_id);
+    const workSegs  = segments.filter(s => !s.break_type_id);
+    const breakSegs = segments.filter(s =>  s.break_type_id);
     if (!workSegs.length) {
-      return res.status(422).json({ error: 'This entry has no editable work segment (summary-only entry).' });
+      return res.status(422).json({ error: 'This entry has no editable work shift.' });
     }
-    workSegs[0].start_time                 = clockInUtc;
-    workSegs[workSegs.length - 1].end_time = clockOutUtc;
+    workSegs[0].start_time = clockInUtc;
+    if (clockOutUtc) workSegs[workSegs.length - 1].end_time = clockOutUtc;
 
     // 3. Auto-revert a locked entry to DRAFT so the edit is accepted.
     let status = entry.status;
     if (LOCKED.includes(status)) status = 'DRAFT';
 
-    // 4. PATCH back the modified segments (source of truth). Rippling recomputes the
-    //    top-level times and summary hours from the segments.
+    // 4. PATCH using Rippling's WRITE shape: job_shifts + breaks (the read-side
+    //    `segments` field is not writable). Rippling recomputes hours from these.
+    const job_shifts = workSegs.map(s => ({
+      start_time:          s.start_time,
+      end_time:            s.end_time != null ? s.end_time : null,   // null == still-open shift
+      original_start_time: s.original_start_time != null ? s.original_start_time : null,
+      original_end_time:   s.original_end_time   != null ? s.original_end_time   : null,
+      job_codes_id:        Array.isArray(s.job_codes_id) ? s.job_codes_id : [],
+      is_hours_only_input: s.is_hours_only_input === true,
+    }));
+    const breaks = breakSegs.map(s => ({
+      start_time:    s.start_time,
+      end_time:      s.end_time != null ? s.end_time : null,
+      break_type_id: s.break_type_id,
+    }));
+
     const patchRes = await fetch(`${BASE}/time-entries/${entryId}`, {
       method: 'PATCH',
       headers: authHeaders,
-      body: JSON.stringify({ worker_id: workerId, segments, status }),
+      body: JSON.stringify({ worker_id: workerId, job_shifts, breaks, status }),
     });
 
     if (!patchRes.ok) return res.status(patchRes.status).json({ error: await ripplingError(patchRes, 'update') });
